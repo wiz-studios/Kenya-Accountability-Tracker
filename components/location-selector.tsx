@@ -1,0 +1,172 @@
+"use client"
+
+import { useState, useMemo } from "react"
+import { Check, ChevronsUpDown, MapPin } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Badge } from "@/components/ui/badge"
+import {
+  enhancedKenyaLocations,
+  getCountyById,
+  getConstituenciesByCounty,
+  type County,
+  type Constituency,
+} from "@/lib/enhanced-kenya-locations"
+
+interface LocationSelectorProps {
+  onLocationChange?: (county: County | null, constituency: Constituency | null) => void
+  placeholder?: string
+  className?: string
+}
+
+export function LocationSelector({
+  onLocationChange,
+  placeholder = "Select location...",
+  className,
+}: LocationSelectorProps) {
+  const [open, setOpen] = useState(false)
+  const [selectedCounty, setSelectedCounty] = useState<County | null>(null)
+  const [selectedConstituency, setSelectedConstituency] = useState<Constituency | null>(null)
+  const [searchValue, setSearchValue] = useState("")
+  const [mode, setMode] = useState<"county" | "constituency">("county")
+
+  // Get filtered data based on search
+  const filteredCounties = useMemo(() => {
+    if (!searchValue) return enhancedKenyaLocations
+    return enhancedKenyaLocations.filter((county) => county.name.toLowerCase().includes(searchValue.toLowerCase()))
+  }, [searchValue])
+
+  const availableConstituencies = useMemo(() => {
+    if (!selectedCounty) return []
+    const constituencies = getConstituenciesByCounty(selectedCounty.id)
+    if (!searchValue) return constituencies
+    return constituencies.filter((constituency) => constituency.name.toLowerCase().includes(searchValue.toLowerCase()))
+  }, [selectedCounty, searchValue])
+
+  const handleCountySelect = (county: County) => {
+    setSelectedCounty(county)
+    setSelectedConstituency(null)
+    setSearchValue("")
+    setMode("constituency")
+    onLocationChange?.(county, null)
+  }
+
+  const handleConstituencySelect = (constituency: Constituency) => {
+    const county = getCountyById(constituency.countyId)
+    setSelectedCounty(county || null)
+    setSelectedConstituency(constituency)
+    setOpen(false)
+    setSearchValue("")
+    onLocationChange?.(county || null, constituency)
+  }
+
+  const clearSelection = () => {
+    setSelectedCounty(null)
+    setSelectedConstituency(null)
+    setSearchValue("")
+    setMode("county")
+    onLocationChange?.(null, null)
+  }
+
+  const resetToCountyMode = () => {
+    setMode("county")
+    setSearchValue("")
+  }
+
+  return (
+    <div className={cn("flex flex-col gap-2", className)}>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" role="combobox" aria-expanded={open} className="justify-between">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <MapPin className="h-4 w-4 flex-shrink-0" />
+              {selectedConstituency ? (
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="truncate">{selectedConstituency.name}</span>
+                  <Badge variant="outline" className="text-xs flex-shrink-0">
+                    {selectedCounty?.name}
+                  </Badge>
+                </div>
+              ) : selectedCounty ? (
+                <span className="truncate">{selectedCounty.name} County</span>
+              ) : (
+                <span className="text-muted-foreground truncate">{placeholder}</span>
+              )}
+            </div>
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[350px] p-0">
+          <Command shouldFilter={false}>
+            <CommandInput
+              placeholder={mode === "county" ? "Search counties..." : "Search constituencies..."}
+              value={searchValue}
+              onValueChange={setSearchValue}
+            />
+            <CommandList>
+              <CommandEmpty>No {mode === "county" ? "counties" : "constituencies"} found.</CommandEmpty>
+
+              {/* Navigation */}
+              {selectedCounty && mode === "constituency" && (
+                <CommandGroup>
+                  <CommandItem onSelect={resetToCountyMode} className="text-muted-foreground">
+                    ← Back to counties
+                  </CommandItem>
+                </CommandGroup>
+              )}
+
+              {/* Counties */}
+              {mode === "county" && (
+                <CommandGroup heading="Counties">
+                  {filteredCounties.map((county) => (
+                    <CommandItem key={county.id} value={county.name} onSelect={() => handleCountySelect(county)}>
+                      <Check
+                        className={cn("mr-2 h-4 w-4", selectedCounty?.id === county.id ? "opacity-100" : "opacity-0")}
+                      />
+                      <div className="flex items-center justify-between w-full">
+                        <span>{county.name}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {county.constituencies.length} constituencies
+                        </Badge>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+
+              {/* Constituencies */}
+              {mode === "constituency" && selectedCounty && (
+                <CommandGroup heading={`Constituencies in ${selectedCounty.name}`}>
+                  {availableConstituencies.map((constituency) => (
+                    <CommandItem
+                      key={constituency.id}
+                      value={constituency.name}
+                      onSelect={() => handleConstituencySelect(constituency)}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedConstituency?.id === constituency.id ? "opacity-100" : "opacity-0",
+                        )}
+                      />
+                      <span>{constituency.name}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      {/* Clear button */}
+      {(selectedCounty || selectedConstituency) && (
+        <Button variant="ghost" size="sm" onClick={clearSelection} className="h-6 px-2 text-xs self-start">
+          Clear selection
+        </Button>
+      )}
+    </div>
+  )
+}
