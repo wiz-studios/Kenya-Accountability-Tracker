@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import type { County, Constituency } from "@/lib/enhanced-kenya-locations"
 import { enhancedProjectData, getProjectsByLocation, type EnhancedProject } from "@/lib/enhanced-project-data"
 import Link from "next/link"
+import { formatDate, formatYear } from "@/lib/formatters"
 
 interface ProjectListDisplayProps {
   selectedCounty: County | null
@@ -23,44 +24,44 @@ const statusConfig = {
   Stalled: {
     variant: "destructive" as const,
     icon: XCircle,
-    color: "text-red-600",
-    bgColor: "bg-red-50",
-    borderColor: "border-red-200",
+    color: "text-rose-600",
+    surface: "bg-rose-50/70",
+    border: "border-rose-200/60",
   },
   Delayed: {
     variant: "secondary" as const,
     icon: Clock,
-    color: "text-yellow-600",
-    bgColor: "bg-yellow-50",
-    borderColor: "border-yellow-200",
+    color: "text-amber-600",
+    surface: "bg-amber-50/70",
+    border: "border-amber-200/60",
   },
   "Behind Schedule": {
     variant: "outline" as const,
     icon: AlertCircle,
     color: "text-orange-600",
-    bgColor: "bg-orange-50",
-    borderColor: "border-orange-200",
+    surface: "bg-orange-50/70",
+    border: "border-orange-200/60",
   },
   Completed: {
     variant: "default" as const,
     icon: CheckCircle,
-    color: "text-green-600",
-    bgColor: "bg-green-50",
-    borderColor: "border-green-200",
+    color: "text-emerald-600",
+    surface: "bg-emerald-50/70",
+    border: "border-emerald-200/60",
   },
   Resumed: {
     variant: "secondary" as const,
     icon: Clock,
-    color: "text-blue-600",
-    bgColor: "bg-blue-50",
-    borderColor: "border-blue-200",
+    color: "text-sky-600",
+    surface: "bg-sky-50/70",
+    border: "border-sky-200/60",
   },
   Cancelled: {
     variant: "destructive" as const,
     icon: XCircle,
-    color: "text-red-600",
-    bgColor: "bg-red-50",
-    borderColor: "border-red-200",
+    color: "text-rose-600",
+    surface: "bg-rose-50/70",
+    border: "border-rose-200/60",
   },
 }
 
@@ -152,31 +153,20 @@ export function ProjectListDisplay({
   return (
     <div className={className}>
       {/* Statistics Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-            <div className="text-sm text-muted-foreground">Total Projects</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-red-600">{stats.stalled}</div>
-            <div className="text-sm text-muted-foreground">Stalled</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
-            <div className="text-sm text-muted-foreground">Completed</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">{stats.avgProgress}%</div>
-            <div className="text-sm text-muted-foreground">Avg Progress</div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        {[
+          { label: "Total Projects", value: stats.total },
+          { label: "Stalled", value: stats.stalled },
+          { label: "Completed", value: stats.completed },
+          { label: "Avg Progress", value: `${stats.avgProgress}%` },
+        ].map((item) => (
+          <Card key={item.label} className="border-foreground/10 bg-white/90 shadow-sm">
+            <CardContent className="p-4">
+              <div className="text-xl font-semibold text-foreground">{item.value}</div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">{item.label}</div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Projects by Status */}
@@ -193,34 +183,36 @@ export function ProjectListDisplay({
 
             return (
               <div key={status}>
-                <div className="flex items-center gap-2 mb-4">
+                <div className="mb-4 flex items-center gap-2">
                   <StatusIcon className={`h-5 w-5 ${config.color}`} />
-                  <h3 className="text-lg font-semibold">{status} Projects</h3>
-                  <Badge variant={config.variant} className="ml-2">
+                  <h3 className="text-lg font-semibold text-foreground">{status} Projects</h3>
+                  <Badge variant="outline" className="border-foreground/20 text-foreground">
                     {projects.length}
                   </Badge>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                   {projects.map((project) => (
                     <Card
                       key={project.id}
-                      className={`hover:shadow-lg transition-all duration-200 ${config.bgColor} ${config.borderColor}`}
+                      className={`border-foreground/10 shadow-sm transition-all duration-200 hover:shadow-lg ${config.surface} ${config.border}`}
                     >
                       <CardHeader>
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <Badge variant="outline">{project.sector}</Badge>
+                              <Badge variant="outline" className="border-foreground/20 text-foreground">
+                                {project.sector}
+                              </Badge>
                               <Badge variant={config.variant}>{project.status}</Badge>
                               {project.urgency === "high" && (
-                                <Badge variant="destructive" className="text-xs">
-                                  High Priority
+                                <Badge variant="destructive" className="text-xs uppercase tracking-wide">
+                                  High priority
                                 </Badge>
                               )}
                             </div>
-                            <CardTitle className="text-lg mb-1">{project.name}</CardTitle>
-                            <CardDescription className="text-sm">
+                            <CardTitle className="text-lg mb-1 text-foreground">{project.name}</CardTitle>
+                            <CardDescription className="text-sm text-muted-foreground">
                               {project.description.substring(0, 120)}...
                             </CardDescription>
                           </div>
@@ -235,7 +227,7 @@ export function ProjectListDisplay({
                           </div>
                           <div className="flex items-center">
                             <Calendar className="w-4 h-4 mr-1 text-muted-foreground" />
-                            <span>Started {new Date(project.startDate).getFullYear()}</span>
+                            <span>Started {formatYear(project.startDate)}</span>
                           </div>
                           <div className="flex items-center">
                             <DollarSign className="w-4 h-4 mr-1 text-muted-foreground" />
@@ -256,7 +248,7 @@ export function ProjectListDisplay({
                               <span>Progress</span>
                               <span>{project.progress}% Complete</span>
                             </div>
-                            <Progress value={project.progress} className="h-2" />
+                            <Progress value={project.progress} className="h-2 bg-foreground/10" />
                           </div>
 
                           {/* Budget Utilization */}
@@ -265,21 +257,21 @@ export function ProjectListDisplay({
                               <span>Budget Utilization</span>
                               <span>{Math.round((project.spent / project.budget) * 100)}%</span>
                             </div>
-                            <Progress value={(project.spent / project.budget) * 100} className="h-2" />
+                            <Progress value={(project.spent / project.budget) * 100} className="h-2 bg-foreground/10" />
                           </div>
 
                           {/* Key Issues */}
                           {project.issues.length > 0 && (
                             <div>
-                              <h4 className="text-sm font-medium mb-2">Key Issues:</h4>
+                              <h4 className="text-sm font-medium mb-2">Key Issues</h4>
                               <div className="flex flex-wrap gap-1">
                                 {project.issues.slice(0, 2).map((issue, index) => (
-                                  <Badge key={index} variant="outline" className="text-xs">
+                                  <Badge key={index} variant="outline" className="border-foreground/20 text-xs text-foreground">
                                     {issue}
                                   </Badge>
                                 ))}
                                 {project.issues.length > 2 && (
-                                  <Badge variant="outline" className="text-xs">
+                                  <Badge variant="outline" className="border-foreground/20 text-xs text-foreground">
                                     +{project.issues.length - 2} more
                                   </Badge>
                                 )}
@@ -290,7 +282,7 @@ export function ProjectListDisplay({
                           {/* Actions */}
                           <div className="flex justify-between items-center pt-2">
                             <div className="text-xs text-muted-foreground">
-                              Updated: {new Date(project.lastUpdate).toLocaleDateString()}
+                              Updated: {formatDate(project.lastUpdate)}
                             </div>
                             <Link href={`/projects/${project.id}`}>
                               <Button size="sm">View Details</Button>

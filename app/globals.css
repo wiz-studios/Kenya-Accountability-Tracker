@@ -4,48 +4,48 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    --background: 36 38% 96%;
+    --foreground: 164 32% 12%;
+    --card: 30 33% 98%;
+    --card-foreground: 164 32% 12%;
+    --popover: 30 33% 98%;
+    --popover-foreground: 164 32% 12%;
+    --primary: 163 55% 25%;
+    --primary-foreground: 36 38% 96%;
+    --secondary: 38 60% 90%;
+    --secondary-foreground: 164 32% 12%;
+    --muted: 35 30% 90%;
+    --muted-foreground: 170 12% 35%;
+    --accent: 18 70% 88%;
+    --accent-foreground: 164 32% 12%;
+    --destructive: 2 72% 46%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 30 18% 82%;
+    --input: 30 18% 82%;
+    --ring: 163 55% 30%;
+    --radius: 0.9rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 84% 4.9%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 94.1%;
+    --background: 164 25% 8%;
+    --foreground: 38 38% 92%;
+    --card: 164 25% 10%;
+    --card-foreground: 38 38% 92%;
+    --popover: 164 25% 8%;
+    --popover-foreground: 38 38% 92%;
+    --primary: 151 55% 50%;
+    --primary-foreground: 164 35% 10%;
+    --secondary: 164 18% 18%;
+    --secondary-foreground: 38 38% 92%;
+    --muted: 164 18% 18%;
+    --muted-foreground: 35 12% 65%;
+    --accent: 22 45% 26%;
+    --accent-foreground: 38 38% 92%;
+    --destructive: 0 64% 38%;
+    --destructive-foreground: 38 38% 92%;
+    --border: 164 18% 18%;
+    --input: 164 18% 18%;
+    --ring: 151 55% 50%;
   }
 }
 
@@ -54,6 +54,74 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    background-image: radial-gradient(800px 520px at 12% -10%, hsla(158, 60%, 55%, 0.15), transparent 60%),
+      radial-gradient(720px 480px at 90% 0%, hsla(38, 85%, 60%, 0.18), transparent 55%);
+    background-attachment: fixed;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .font-display {
+    font-family: var(--font-display), ui-serif, serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@layer utilities {
+  .animate-fade-up {
+    animation: fade-up 0.8s ease forwards;
+    opacity: 0;
+  }
+  .animate-fade-in {
+    animation: fade-in 0.9s ease forwards;
+    opacity: 0;
+  }
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-in,
+  .animate-float {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }

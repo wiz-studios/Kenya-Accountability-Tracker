@@ -1,14 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { BarChart3, TrendingUp, MapPin, Filter, Download, Eye } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { formatDate, formatNumber } from "@/lib/formatters"
+import { stateHouseExpenditures } from "@/lib/state-house"
 
-// Mock analytics data
 const analyticsData = {
   overview: {
     totalProjects: 847,
@@ -18,7 +19,6 @@ const analyticsData = {
     activeCases: 89,
     convictions: 12,
   },
-
   sectorAnalysis: [
     { sector: "Transport", projects: 89, loss: 45.2, percentage: 29, trend: "+12%" },
     { sector: "Health", projects: 67, loss: 34.1, percentage: 22, trend: "-3%" },
@@ -26,7 +26,6 @@ const analyticsData = {
     { sector: "Water", projects: 45, loss: 25.3, percentage: 16, trend: "+5%" },
     { sector: "Energy", projects: 34, loss: 23.4, percentage: 15, trend: "-2%" },
   ],
-
   countyRankings: [
     { county: "Nairobi", projects: 45, loss: 23.4, score: 34 },
     { county: "Mombasa", projects: 28, loss: 18.2, score: 42 },
@@ -37,7 +36,6 @@ const analyticsData = {
     { county: "Kiambu", projects: 12, loss: 6.2, score: 72 },
     { county: "Meru", projects: 10, loss: 4.8, score: 78 },
   ],
-
   yearlyTrends: [
     { year: "2020", projects: 45, loss: 28.3, recovery: 2.1 },
     { year: "2021", projects: 67, loss: 34.7, recovery: 4.8 },
@@ -45,7 +43,6 @@ const analyticsData = {
     { year: "2023", projects: 78, loss: 38.9, recovery: 7.9 },
     { year: "2024", projects: 56, loss: 31.2, recovery: 8.4 },
   ],
-
   leadershipAnalysis: [
     { position: "County Governors", total: 47, withAllegations: 12, convictionRate: 8.5 },
     { position: "Members of Parliament", total: 290, withAllegations: 34, convictionRate: 5.2 },
@@ -55,360 +52,391 @@ const analyticsData = {
 }
 
 export default function AnalyticsPage() {
-  const [selectedYear, setSelectedYear] = useState("2024")
-  const [selectedMetric, setSelectedMetric] = useState("loss")
+  const searchParams = useSearchParams()
+  const tabParam = searchParams?.get("tab") || "sectors"
+  const defaultTab =
+    tabParam === "counties" || tabParam === "trends" || tabParam === "leadership" || tabParam === "statehouse"
+      ? tabParam
+      : "sectors"
+  const formatStateHouseAmount = (value: number) => `KSh ${formatNumber(Math.round(value))}M`
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Analytics & Insights</h1>
-          <p className="text-muted-foreground">Comprehensive analysis of accountability trends across Kenya</p>
+    <div className="min-h-screen">
+      <section className="container mx-auto px-4 pt-10">
+        <div className="rounded-3xl border border-foreground/10 bg-white/80 p-8 shadow-sm">
+          <Badge className="bg-foreground text-background">Accountability insights</Badge>
+          <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-2">
+              <h1 className="font-display text-3xl text-foreground md:text-4xl">Analytics & Insights</h1>
+              <p className="max-w-2xl text-muted-foreground">
+                Comprehensive analysis of accountability trends across sectors, counties, and leadership tiers.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline">
+                <Filter className="mr-2 h-4 w-4" />
+                Filter
+              </Button>
+              <Button variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Export report
+              </Button>
+            </div>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Filter className="w-4 h-4 mr-2" />
-            Filter
-          </Button>
-          <Button variant="outline">
-            <Download className="w-4 h-4 mr-2" />
-            Export Report
-          </Button>
+      </section>
+
+      <section className="container mx-auto px-4 py-8">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+          {[
+            { label: "Total projects", value: analyticsData.overview.totalProjects },
+            { label: "Stalled projects", value: analyticsData.overview.stalledProjects },
+            { label: "Total loss", value: `KSh ${analyticsData.overview.totalLoss}B` },
+            { label: "Recovered", value: `KSh ${analyticsData.overview.recoveredFunds}B` },
+            { label: "Active cases", value: analyticsData.overview.activeCases },
+            { label: "Convictions", value: analyticsData.overview.convictions },
+          ].map((metric) => (
+            <Card key={metric.label} className="border-foreground/10 bg-white/90 shadow-sm">
+              <CardContent className="p-4">
+                <div className="text-xl font-semibold text-foreground">{metric.value}</div>
+                <div className="text-xs uppercase tracking-wide text-muted-foreground">{metric.label}</div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      </div>
+      </section>
 
-      {/* Key Metrics Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-blue-600">{analyticsData.overview.totalProjects}</div>
-            <div className="text-sm text-muted-foreground">Total Projects</div>
-          </CardContent>
-        </Card>
+      <section className="container mx-auto px-4 pb-12">
+        <Tabs defaultValue={defaultTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 gap-2 rounded-full bg-foreground/5 p-1 text-foreground/70 md:grid-cols-5">
+            {["sectors", "counties", "trends", "leadership", "statehouse"].map((tab) => (
+              <TabsTrigger
+                key={tab}
+                value={tab}
+                className="rounded-full data-[state=active]:bg-foreground data-[state=active]:text-background"
+              >
+                {tab === "sectors"
+                  ? "By Sector"
+                  : tab === "counties"
+                    ? "By County"
+                    : tab === "trends"
+                      ? "Trends"
+                      : tab === "leadership"
+                        ? "Leadership"
+                        : "State House"}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-red-600">{analyticsData.overview.stalledProjects}</div>
-            <div className="text-sm text-muted-foreground">Stalled Projects</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-orange-600">KSh {analyticsData.overview.totalLoss}B</div>
-            <div className="text-sm text-muted-foreground">Total Loss</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-green-600">KSh {analyticsData.overview.recoveredFunds}B</div>
-            <div className="text-sm text-muted-foreground">Recovered</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-purple-600">{analyticsData.overview.activeCases}</div>
-            <div className="text-sm text-muted-foreground">Active Cases</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-gray-600">{analyticsData.overview.convictions}</div>
-            <div className="text-sm text-muted-foreground">Convictions</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="sectors" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="sectors">By Sector</TabsTrigger>
-          <TabsTrigger value="counties">By County</TabsTrigger>
-          <TabsTrigger value="trends">Trends</TabsTrigger>
-          <TabsTrigger value="leadership">Leadership</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="sectors" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <BarChart3 className="w-5 h-5 mr-2" />
-                Sector Analysis
-              </CardTitle>
-              <CardDescription>Breakdown of stalled projects and losses by sector</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {analyticsData.sectorAnalysis.map((sector, index) => (
+          <TabsContent value="sectors" className="space-y-6">
+            <Card className="border-foreground/10 bg-white/90 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Sector analysis
+                </CardTitle>
+                <CardDescription>Breakdown of stalled projects and losses by sector</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {analyticsData.sectorAnalysis.map((sector) => (
                   <div key={sector.sector} className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <h3 className="font-medium">{sector.sector}</h3>
-                        <Badge variant="outline">{sector.projects} projects</Badge>
-                        <Badge variant={sector.trend.startsWith("+") ? "destructive" : "default"} className="text-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h3 className="font-medium text-foreground">{sector.sector}</h3>
+                        <Badge variant="outline" className="border-foreground/20 text-foreground">
+                          {sector.projects} projects
+                        </Badge>
+                        <Badge
+                          variant="outline"
+                          className={
+                            sector.trend.startsWith("+")
+                              ? "border-emerald-500/40 text-emerald-600"
+                              : "border-rose-500/40 text-rose-600"
+                          }
+                        >
                           {sector.trend} YoY
                         </Badge>
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold">KSh {sector.loss}B lost</div>
-                        <div className="text-sm text-muted-foreground">{sector.percentage}% of total</div>
+                      <div className="text-right text-sm">
+                        <div className="font-semibold text-foreground">KSh {sector.loss}B lost</div>
+                        <div className="text-muted-foreground">{sector.percentage}% of total</div>
                       </div>
                     </div>
-                    <Progress value={sector.percentage} className="h-3" />
+                    <Progress value={sector.percentage} className="h-2 bg-foreground/10" />
                   </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Sector Recommendations */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Sector Recommendations</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <h4 className="font-medium text-red-900 mb-2">High Risk: Transport</h4>
-                    <p className="text-sm text-red-800">
-                      Requires immediate attention due to large budget allocations and high failure rate.
-                    </p>
-                  </div>
-                  <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                    <h4 className="font-medium text-orange-900 mb-2">Medium Risk: Health</h4>
-                    <p className="text-sm text-orange-800">
-                      Shows improvement but needs continued monitoring especially in rural areas.
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <h4 className="font-medium text-green-900 mb-2">Improving: Energy</h4>
-                    <p className="text-sm text-green-800">
-                      Showing positive trends with better project completion rates.
-                    </p>
-                  </div>
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 className="font-medium text-blue-900 mb-2">Focus Area: Education</h4>
-                    <p className="text-sm text-blue-800">
-                      Increasing investments require enhanced oversight mechanisms.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              {[
+                {
+                  title: "High risk: Transport",
+                  body: "Requires immediate attention due to large budget allocations and high failure rate.",
+                },
+                {
+                  title: "Medium risk: Health",
+                  body: "Shows improvement but needs continued monitoring especially in rural areas.",
+                },
+                {
+                  title: "Improving: Energy",
+                  body: "Showing positive trends with better project completion rates.",
+                },
+                {
+                  title: "Focus area: Education",
+                  body: "Increasing investments require enhanced oversight mechanisms.",
+                },
+              ].map((item) => (
+                <Card key={item.title} className="border-foreground/10 bg-white/90 shadow-sm">
+                  <CardContent className="p-5">
+                    <h4 className="font-medium text-foreground">{item.title}</h4>
+                    <p className="mt-2 text-sm text-muted-foreground">{item.body}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
 
-        <TabsContent value="counties" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <MapPin className="w-5 h-5 mr-2" />
-                County Accountability Rankings
-              </CardTitle>
-              <CardDescription>Counties ranked by accountability score (higher is better)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+          <TabsContent value="counties" className="space-y-6">
+            <Card className="border-foreground/10 bg-white/90 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  County accountability rankings
+                </CardTitle>
+                <CardDescription>Counties ranked by accountability score (higher is better)</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 {analyticsData.countyRankings.map((county, index) => (
-                  <div key={county.county} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div key={county.county} className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-foreground/10 bg-background p-4">
                     <div className="flex items-center gap-4">
-                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full border border-foreground/10 text-sm font-medium text-foreground">
                         {index + 1}
                       </div>
                       <div>
-                        <h4 className="font-medium">{county.county} County</h4>
+                        <h4 className="font-medium text-foreground">{county.county} County</h4>
                         <div className="text-sm text-muted-foreground">
-                          {county.projects} projects • KSh {county.loss}B lost
+                          {county.projects} projects | KSh {county.loss}B lost
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="flex items-center gap-2">
-                        <div className="text-lg font-bold">{county.score}</div>
+                      <div className="flex items-center justify-end gap-2">
+                        <div className="text-lg font-semibold text-foreground">{county.score}</div>
                         <div className="text-sm text-muted-foreground">/100</div>
                       </div>
-                      <Progress value={county.score} className="h-2 w-20" />
+                      <Progress value={county.score} className="mt-1 h-2 w-24 bg-foreground/10" />
                     </div>
                   </div>
                 ))}
-              </div>
-              <div className="mt-6 text-center">
-                <Button variant="outline">
-                  <Eye className="w-4 h-4 mr-2" />
-                  View All 47 Counties
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                <div className="text-center">
+                  <Button variant="outline">
+                    <Eye className="mr-2 h-4 w-4" />
+                    View all 47 counties
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="trends" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <TrendingUp className="w-5 h-5 mr-2" />
-                  Yearly Trends
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+          <TabsContent value="trends" className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Card className="border-foreground/10 bg-white/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5" />
+                    Yearly trends
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   {analyticsData.yearlyTrends.map((year) => (
                     <div key={year.year} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium">{year.year}</span>
-                        <div className="text-right text-sm">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium text-foreground">{year.year}</span>
+                        <div className="text-right text-muted-foreground">
                           <div>{year.projects} projects</div>
-                          <div className="text-red-600">KSh {year.loss}B lost</div>
+                          <div>KSh {year.loss}B lost</div>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <div className="text-xs text-muted-foreground mb-1">Projects Lost</div>
-                          <Progress value={(year.projects / 100) * 100} className="h-2" />
+                          <div className="text-xs text-muted-foreground mb-1">Projects lost</div>
+                          <Progress value={(year.projects / 100) * 100} className="h-2 bg-foreground/10" />
                         </div>
                         <div>
-                          <div className="text-xs text-muted-foreground mb-1">Recovery Rate</div>
-                          <Progress value={(year.recovery / year.loss) * 100} className="h-2 [&>div]:bg-green-500" />
+                          <div className="text-xs text-muted-foreground mb-1">Recovery rate</div>
+                          <Progress value={(year.recovery / year.loss) * 100} className="h-2 bg-foreground/10" />
                         </div>
                       </div>
                     </div>
                   ))}
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            <Card>
+              <Card className="border-foreground/10 bg-white/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle>Key insights</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {[
+                    {
+                      title: "Peak issues: 2022",
+                      body: "Highest number of stalled projects coincided with election year activities.",
+                    },
+                    {
+                      title: "Recovery improving",
+                      body: "Fund recovery rates have improved from 7% in 2020 to 27% in 2024.",
+                    },
+                    {
+                      title: "Seasonal patterns",
+                      body: "More issues reported during budget preparation periods (March-June).",
+                    },
+                  ].map((insight) => (
+                    <div key={insight.title} className="rounded-2xl border border-foreground/10 bg-background p-4">
+                      <h4 className="font-medium text-foreground">{insight.title}</h4>
+                      <p className="mt-1 text-sm text-muted-foreground">{insight.body}</p>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="leadership" className="space-y-6">
+            <Card className="border-foreground/10 bg-white/90 shadow-sm">
               <CardHeader>
-                <CardTitle>Key Insights</CardTitle>
+                <CardTitle>Leadership accountability analysis</CardTitle>
+                <CardDescription>Breakdown of allegations and conviction rates by leadership position</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 className="font-medium text-blue-900 mb-2">Peak Issues: 2022</h4>
-                    <p className="text-sm text-blue-800">
-                      Highest number of stalled projects coincided with election year activities.
-                    </p>
-                  </div>
-
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <h4 className="font-medium text-green-900 mb-2">Recovery Improving</h4>
-                    <p className="text-sm text-green-800">
-                      Fund recovery rates have improved from 7% in 2020 to 27% in 2024.
-                    </p>
-                  </div>
-
-                  <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                    <h4 className="font-medium text-orange-900 mb-2">Seasonal Patterns</h4>
-                    <p className="text-sm text-orange-800">
-                      More issues reported during budget preparation periods (March-June).
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="leadership" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Leadership Accountability Analysis</CardTitle>
-              <CardDescription>Breakdown of allegations and conviction rates by leadership position</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
+              <CardContent className="space-y-6">
                 {analyticsData.leadershipAnalysis.map((leadership) => (
                   <div key={leadership.position} className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium">{leadership.position}</h3>
-                      <div className="text-right">
-                        <div className="text-sm text-muted-foreground">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <h3 className="font-medium text-foreground">{leadership.position}</h3>
+                      <div className="text-right text-sm text-muted-foreground">
+                        <div>
                           {leadership.withAllegations} of {leadership.total} with allegations
                         </div>
-                        <div className="font-semibold">{leadership.convictionRate}% conviction rate</div>
+                        <div className="font-semibold text-foreground">{leadership.convictionRate}% conviction rate</div>
                       </div>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                       <div>
                         <div className="text-xs text-muted-foreground mb-1">
-                          Allegations Rate ({Math.round((leadership.withAllegations / leadership.total) * 100)}%)
+                          Allegations rate ({Math.round((leadership.withAllegations / leadership.total) * 100)}%)
                         </div>
-                        <Progress value={(leadership.withAllegations / leadership.total) * 100} className="h-2" />
+                        <Progress value={(leadership.withAllegations / leadership.total) * 100} className="h-2 bg-foreground/10" />
                       </div>
                       <div>
-                        <div className="text-xs text-muted-foreground mb-1">
-                          Conviction Rate ({leadership.convictionRate}%)
-                        </div>
-                        <Progress value={leadership.convictionRate} className="h-2 [&>div]:bg-orange-500" />
+                        <div className="text-xs text-muted-foreground mb-1">Conviction rate ({leadership.convictionRate}%)</div>
+                        <Progress value={leadership.convictionRate} className="h-2 bg-foreground/10" />
                       </div>
                     </div>
                   </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Most Accountable Leaders</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card className="border-foreground/10 bg-white/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle>Most accountable leaders</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
                   {[
                     { name: "Gov. Anne Waiguru", county: "Kirinyaga", score: 92 },
                     { name: "Gov. Kivutha Kibwana", county: "Makueni", score: 89 },
                     { name: "Gov. Alfred Mutua", county: "Machakos", score: 87 },
                     { name: "Hon. John Mbadi", constituency: "Gwassi", score: 85 },
-                  ].map((leader, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  ].map((leader) => (
+                    <div key={leader.name} className="flex items-center justify-between rounded-2xl border border-foreground/10 bg-background p-3">
                       <div>
-                        <div className="font-medium">{leader.name}</div>
+                        <div className="font-medium text-foreground">{leader.name}</div>
                         <div className="text-sm text-muted-foreground">
-                          {"county" in leader ? leader.county + " County" : leader.constituency + " Constituency"}
+                          {"county" in leader ? `${leader.county} County` : `${leader.constituency} Constituency`}
                         </div>
                       </div>
-                      <div className="text-lg font-bold text-green-600">{leader.score}</div>
+                      <div className="text-lg font-semibold text-foreground">{leader.score}</div>
                     </div>
                   ))}
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Areas Needing Attention</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+              <Card className="border-foreground/10 bg-white/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle>Areas needing attention</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
                   {[
                     { area: "Procurement Processes", severity: "High", cases: 45 },
                     { area: "Project Supervision", severity: "High", cases: 38 },
                     { area: "Budget Implementation", severity: "Medium", cases: 29 },
                     { area: "Public Participation", severity: "Medium", cases: 22 },
-                  ].map((area, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  ].map((area) => (
+                    <div key={area.area} className="flex items-center justify-between rounded-2xl border border-foreground/10 bg-background p-3">
                       <div>
-                        <div className="font-medium">{area.area}</div>
+                        <div className="font-medium text-foreground">{area.area}</div>
                         <div className="text-sm text-muted-foreground">{area.cases} active cases</div>
                       </div>
                       <Badge variant={area.severity === "High" ? "destructive" : "secondary"}>{area.severity}</Badge>
                     </div>
                   ))}
-                </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="statehouse" className="space-y-6">
+            <Card className="border-foreground/10 bg-white/90 shadow-sm">
+              <CardHeader>
+                <CardTitle>State House Expenditures</CardTitle>
+                <CardDescription>Non-compliant or unexplained expenditures requiring accountability</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {stateHouseExpenditures.map((item) => (
+                  <div
+                    key={item.title}
+                    className="rounded-2xl border border-foreground/10 bg-background p-4 shadow-sm transition hover:shadow-md"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <h4 className="font-medium text-foreground">{item.title}</h4>
+                        <p className="text-sm text-muted-foreground">{item.issue}</p>
+                        <div className="mt-2 text-xs text-muted-foreground">{formatDate(item.date)}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-semibold text-foreground">
+                          {formatStateHouseAmount(item.amountMillions)}
+                        </div>
+                        <Badge variant="outline" className="border-foreground/20 text-foreground">
+                          {item.status}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      <Badge variant="outline" className="border-foreground/20 text-foreground">
+                        Risk {item.risk}%
+                      </Badge>
+                      {item.reference ? (
+                        <Badge variant="outline" className="border-foreground/20 text-foreground">
+                          <a href={item.reference} target="_blank" rel="noreferrer">
+                            Audit reference
+                          </a>
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="border-amber-200 text-amber-700">
+                          Reference pending
+                        </Badge>
+                      )}
+                      {item.source ? <span>Source: {item.source}</span> : <span>Source pending</span>}
+                    </div>
+                  </div>
+                ))}
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
+      </section>
     </div>
   )
 }

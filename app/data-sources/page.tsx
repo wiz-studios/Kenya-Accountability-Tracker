@@ -20,8 +20,8 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { formatDate, formatNumber } from "@/lib/formatters"
 
-// Data sources information
 const dataSources = [
   {
     id: 1,
@@ -221,365 +221,335 @@ export default function DataSourcesPage() {
   const activeSources = filteredSources.filter((s) => s.status === "active").length
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Data Sources Library</h1>
-        <p className="text-muted-foreground">
-          Comprehensive repository of official reports, investigations, and verified information
-        </p>
-      </div>
+    <div className="min-h-screen">
+      <section className="container mx-auto px-4 pt-10">
+        <div className="rounded-3xl border border-foreground/10 bg-white/80 p-8 shadow-sm">
+          <Badge className="bg-foreground text-background">Data intelligence</Badge>
+          <h1 className="mt-4 font-display text-3xl text-foreground md:text-4xl">Data Sources Library</h1>
+          <p className="mt-2 max-w-2xl text-muted-foreground">
+            Comprehensive repository of official reports, investigations, and verified information feeding the
+            accountability platform.
+          </p>
+        </div>
+      </section>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center">
-              <Database className="h-8 w-8 text-blue-600 mr-3" />
-              <div>
-                <div className="text-2xl font-bold">{totalSources}</div>
-                <div className="text-sm text-muted-foreground">Data Sources</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center">
-              <CheckCircle className="h-8 w-8 text-green-600 mr-3" />
-              <div>
-                <div className="text-2xl font-bold">{activeSources}</div>
-                <div className="text-sm text-muted-foreground">Active Sources</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center">
-              <Shield className="h-8 w-8 text-purple-600 mr-3" />
-              <div>
-                <div className="text-2xl font-bold">{averageTrustScore}%</div>
-                <div className="text-sm text-muted-foreground">Avg Trust Score</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center">
-              <FileText className="h-8 w-8 text-orange-600 mr-3" />
-              <div>
-                <div className="text-2xl font-bold">{totalRecords.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">Total Records</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="sources" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="sources">Data Sources</TabsTrigger>
-          <TabsTrigger value="reports">Recent Reports</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="sources" className="space-y-6">
-          {/* Filters */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Filter className="w-5 h-5 mr-2" />
-                Filter Data Sources
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Search Sources</label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search sources..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
+      <section className="container mx-auto px-4 py-8">
+        <div className="grid gap-4 md:grid-cols-4">
+          {[
+            { label: "Data sources", value: totalSources, icon: Database },
+            { label: "Active sources", value: activeSources, icon: CheckCircle },
+            { label: "Avg trust score", value: `${averageTrustScore}%`, icon: Shield },
+            { label: "Total records", value: formatNumber(totalRecords), icon: FileText },
+          ].map((stat) => (
+            <Card key={stat.label} className="border-foreground/10 bg-white/90 shadow-sm">
+              <CardContent className="flex items-center gap-3 p-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-foreground/5">
+                  <stat.icon className="h-5 w-5 text-foreground" />
                 </div>
-
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Source Type</label>
-                  <Select value={selectedType} onValueChange={setSelectedType}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sourceTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="text-xl font-semibold text-foreground">{stat.value}</div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground">{stat.label}</div>
                 </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
 
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Status</label>
-                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusOptions.map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {status}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+      <section className="container mx-auto px-4 pb-12">
+        <Tabs defaultValue="sources" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 gap-2 rounded-full bg-foreground/5 p-1 text-foreground/70">
+            <TabsTrigger
+              value="sources"
+              className="rounded-full data-[state=active]:bg-foreground data-[state=active]:text-background"
+            >
+              Data sources
+            </TabsTrigger>
+            <TabsTrigger
+              value="reports"
+              className="rounded-full data-[state=active]:bg-foreground data-[state=active]:text-background"
+            >
+              Recent reports
+            </TabsTrigger>
+          </TabsList>
 
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Sort By</label>
-                  <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="trustScore">Trust Score</SelectItem>
-                      <SelectItem value="records">Record Count</SelectItem>
-                      <SelectItem value="name">Name</SelectItem>
-                      <SelectItem value="lastUpdate">Last Updated</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Sources Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {sortedSources.map((source) => (
-              <Card key={source.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline">{source.type}</Badge>
-                        <Badge variant={source.status === "active" ? "default" : "secondary"}>{source.status}</Badge>
-                      </div>
-                      <CardTitle className="text-lg">{source.name}</CardTitle>
-                      <CardDescription className="mt-2">{source.description}</CardDescription>
+          <TabsContent value="sources" className="space-y-6">
+            <Card className="border-foreground/10 bg-white/90 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Filter className="h-5 w-5" />
+                  Filter data sources
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-4">
+                  <div>
+                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Search sources
+                    </label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search sources..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
                     </div>
                   </div>
-                </CardHeader>
 
-                <CardContent>
-                  <div className="space-y-4">
-                    {/* Trust Score */}
+                  <div>
+                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Source type
+                    </label>
+                    <Select value={selectedType} onValueChange={setSelectedType}>
+                      <SelectTrigger className="rounded-full border-foreground/20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sourceTypes.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Status
+                    </label>
+                    <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                      <SelectTrigger className="rounded-full border-foreground/20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {statusOptions.map((status) => (
+                          <SelectItem key={status} value={status}>
+                            {status}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Sort by
+                    </label>
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                      <SelectTrigger className="rounded-full border-foreground/20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="trustScore">Trust score</SelectItem>
+                        <SelectItem value="records">Record count</SelectItem>
+                        <SelectItem value="name">Name</SelectItem>
+                        <SelectItem value="lastUpdate">Last updated</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              {sortedSources.map((source) => (
+                <Card key={source.id} className="border-foreground/10 bg-white/90 shadow-sm">
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="outline" className="border-foreground/20 text-foreground">
+                            {source.type}
+                          </Badge>
+                          <Badge variant={source.status === "active" ? "default" : "secondary"}>{source.status}</Badge>
+                        </div>
+                        <CardTitle className="mt-3 text-lg text-foreground">{source.name}</CardTitle>
+                        <CardDescription className="mt-2">{source.description}</CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="space-y-4">
                     <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Trust Score</span>
+                      <div className="mb-1 flex justify-between text-sm">
+                        <span>Trust score</span>
                         <span>{source.trustScore}%</span>
                       </div>
-                      <Progress value={source.trustScore} className="h-2" />
+                      <Progress value={source.trustScore} className="h-2 bg-foreground/10" />
                     </div>
 
-                    {/* Key Stats */}
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <div className="text-muted-foreground">Records</div>
-                        <div className="font-semibold">{source.recordsCount.toLocaleString()}</div>
+                        <div className="font-semibold text-foreground">{formatNumber(source.recordsCount)}</div>
                       </div>
                       <div>
-                        <div className="text-muted-foreground">Update Frequency</div>
-                        <div className="font-semibold">{source.frequency}</div>
+                        <div className="text-muted-foreground">Update frequency</div>
+                        <div className="font-semibold text-foreground">{source.frequency}</div>
                       </div>
                       <div>
                         <div className="text-muted-foreground">Coverage</div>
-                        <div className="font-semibold">{source.coverage}</div>
+                        <div className="font-semibold text-foreground">{source.coverage}</div>
                       </div>
                       <div>
-                        <div className="text-muted-foreground">Last Updated</div>
-                        <div className="font-semibold">{new Date(source.lastUpdate).toLocaleDateString()}</div>
+                        <div className="text-muted-foreground">Last updated</div>
+                        <div className="font-semibold text-foreground">{formatDate(source.lastUpdate)}</div>
                       </div>
                     </div>
 
-                    {/* Categories */}
                     <div>
-                      <h4 className="text-sm font-medium mb-2">Data Categories</h4>
+                      <h4 className="text-sm font-medium text-foreground mb-2">Data categories</h4>
                       <div className="flex flex-wrap gap-1">
-                        {source.categories.map((category, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
+                        {source.categories.map((category) => (
+                          <Badge key={category} variant="outline" className="border-foreground/20 text-xs text-foreground">
                             {category}
                           </Badge>
                         ))}
                       </div>
                     </div>
 
-                    {/* Data Types */}
                     <div>
-                      <h4 className="text-sm font-medium mb-2">Available Formats</h4>
+                      <h4 className="text-sm font-medium text-foreground mb-2">Available formats</h4>
                       <div className="flex flex-wrap gap-1">
-                        {source.dataTypes.map((type, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs">
+                        {source.dataTypes.map((type) => (
+                          <Badge key={type} variant="secondary" className="text-xs">
                             {type}
                           </Badge>
                         ))}
                       </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex gap-2 pt-2 border-t">
+                    <div className="flex gap-2 border-t border-foreground/10 pt-2">
                       {source.url !== "Internal" && (
                         <Button variant="outline" size="sm" className="flex-1">
-                          <ExternalLink className="w-3 h-3 mr-1" />
-                          Visit Source
+                          <ExternalLink className="mr-1 h-3 w-3" />
+                          Visit source
                         </Button>
                       )}
                       <Button variant="outline" size="sm" className="flex-1">
-                        <Download className="w-3 h-3 mr-1" />
-                        Export Data
+                        <Download className="mr-1 h-3 w-3" />
+                        Export data
                       </Button>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
 
-        <TabsContent value="reports" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <FileText className="w-5 h-5 mr-2" />
-                Recent Reports & Publications
-              </CardTitle>
-              <CardDescription>Latest reports, investigations, and publications from our data sources</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentReports.map((report, index) => (
-                  <div key={index} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="outline">{report.type}</Badge>
-                          <span className="text-sm text-muted-foreground">
-                            {new Date(report.date).toLocaleDateString()}
-                          </span>
+          <TabsContent value="reports" className="space-y-6">
+            <Card className="border-foreground/10 bg-white/90 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Recent reports & publications
+                </CardTitle>
+                <CardDescription>Latest reports, investigations, and publications from our data sources</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {recentReports.map((report) => (
+                  <div key={report.title} className="rounded-2xl border border-foreground/10 bg-background p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="outline" className="border-foreground/20 text-foreground">
+                            {report.type}
+                          </Badge>
+                          <span className="text-sm text-muted-foreground">{formatDate(report.date)}</span>
                         </div>
-                        <h4 className="font-medium mb-1">{report.title}</h4>
-                        <p className="text-sm text-muted-foreground mb-2">Source: {report.source}</p>
-                        <p className="text-sm">{report.findings}</p>
+                        <h4 className="mt-2 font-medium text-foreground">{report.title}</h4>
+                        <p className="mt-1 text-sm text-muted-foreground">Source: {report.source}</p>
+                        <p className="mt-2 text-sm">{report.findings}</p>
                       </div>
                       <Button variant="ghost" size="sm">
-                        <ExternalLink className="w-4 h-4" />
+                        <ExternalLink className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                 ))}
-              </div>
-
-              <div className="mt-6 text-center">
-                <Button variant="outline">View All Reports</Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Data Quality Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Data Quality</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Accuracy</span>
-                    <span className="font-semibold">94%</span>
-                  </div>
-                  <Progress value={94} className="h-2" />
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Completeness</span>
-                    <span className="font-semibold">87%</span>
-                  </div>
-                  <Progress value={87} className="h-2" />
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Timeliness</span>
-                    <span className="font-semibold">91%</span>
-                  </div>
-                  <Progress value={91} className="h-2" />
+                <div className="text-center">
+                  <Button variant="outline">View all reports</Button>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Update Status</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+            <div className="grid gap-6 md:grid-cols-3">
+              <Card className="border-foreground/10 bg-white/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg">Data quality</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {[
+                    { label: "Accuracy", value: 94 },
+                    { label: "Completeness", value: 87 },
+                    { label: "Timeliness", value: 91 },
+                  ].map((metric) => (
+                    <div key={metric.label}>
+                      <div className="flex items-center justify-between text-sm">
+                        <span>{metric.label}</span>
+                        <span className="font-semibold text-foreground">{metric.value}%</span>
+                      </div>
+                      <Progress value={metric.value} className="mt-2 h-2 bg-foreground/10" />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              <Card className="border-foreground/10 bg-white/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg">Update status</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                      <span className="text-sm">Up to date</span>
+                      <CheckCircle className="mr-2 h-4 w-4 text-emerald-500" />
+                      <span>Up to date</span>
                     </div>
-                    <span className="font-semibold">6 sources</span>
+                    <span className="font-semibold text-foreground">6 sources</span>
                   </div>
-
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <Clock className="w-4 h-4 text-yellow-500 mr-2" />
-                      <span className="text-sm">Pending update</span>
+                      <Clock className="mr-2 h-4 w-4 text-amber-500" />
+                      <span>Pending update</span>
                     </div>
-                    <span className="font-semibold">2 sources</span>
+                    <span className="font-semibold text-foreground">2 sources</span>
                   </div>
-
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <AlertTriangle className="w-4 h-4 text-red-500 mr-2" />
-                      <span className="text-sm">Delayed</span>
+                      <AlertTriangle className="mr-2 h-4 w-4 text-rose-500" />
+                      <span>Delayed</span>
                     </div>
-                    <span className="font-semibold">0 sources</span>
+                    <span className="font-semibold text-foreground">0 sources</span>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Coverage Stats</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Counties Covered</span>
-                    <span className="font-semibold">47/47</span>
+              <Card className="border-foreground/10 bg-white/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg">Coverage stats</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span>Counties covered</span>
+                    <span className="font-semibold text-foreground">47/47</span>
                   </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Sectors Covered</span>
-                    <span className="font-semibold">12/12</span>
+                  <div className="flex justify-between">
+                    <span>Sectors covered</span>
+                    <span className="font-semibold text-foreground">12/12</span>
                   </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Data Freshness</span>
-                    <span className="font-semibold">2.3 days avg</span>
+                  <div className="flex justify-between">
+                    <span>Data freshness</span>
+                    <span className="font-semibold text-foreground">2.3 days avg</span>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </section>
     </div>
   )
 }

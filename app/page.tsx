@@ -1,431 +1,541 @@
 "use client"
+
 import {
-  AlertTriangle,
-  DollarSign,
-  MapPin,
-  Users,
-  FileText,
-  Search,
-  Eye,
   ArrowRight,
-  Shield,
-  AlertCircle,
   BarChart3,
+  FileText,
+  MapPin,
+  Search,
+  Shield,
+  Sparkles,
+  TrendingDown,
+  Users,
 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import Link from "next/link"
+import { formatDate, formatNumber } from "@/lib/formatters"
+import { stateHouseExpenditures } from "@/lib/state-house"
 
-// Enhanced mock data for the homepage
-const platformStats = {
-  totalProjects: 847,
-  stalledProjects: 234,
-  totalLoss: 156.7, // in billions
-  activeCases: 89,
-  verifiedReports: 156,
-  lastUpdated: "2025-06-03",
-}
+const headlineStats = [
+  { label: "Stalled Projects", value: "234", note: "Across 47 counties" },
+  { label: "Public Funds at Risk", value: "KSh 156.7B", note: "Verified exposure" },
+  { label: "Open Investigations", value: "89", note: "Active accountability cases" },
+  { label: "Citizen Reports", value: "156", note: "Verified submissions" },
+]
 
-const recentUpdates = [
+const liveSignals = [
   {
-    id: 1,
-    type: "project",
-    title: "Nairobi BRT System Officially Cancelled",
-    location: "Nairobi County",
+    title: "Nairobi BRT officially cancelled",
+    label: "Project",
+    county: "Nairobi County",
     amount: "KSh 15.2B",
-    date: "2025-06-02",
-    status: "cancelled",
-    source: "Ministry of Transport",
+    status: "High impact",
   },
   {
-    id: 2,
-    type: "leader",
-    title: "Machakos Governor Charged with Embezzlement",
-    location: "Machakos County",
+    title: "Machakos governor charged",
+    label: "Leadership",
+    county: "Machakos County",
     amount: "KSh 2.1B",
-    date: "2025-06-01",
-    status: "charged",
-    source: "EACC",
+    status: "Prosecution",
   },
   {
-    id: 3,
-    type: "project",
-    title: "Mombasa Water Project Back on Track",
-    location: "Mombasa County",
+    title: "Mombasa water project resumed",
+    label: "Project",
+    county: "Mombasa County",
     amount: "KSh 8.7B",
-    date: "2025-05-30",
-    status: "resumed",
-    source: "County Government",
+    status: "Recovery",
   },
 ]
 
-const criticalIssues = [
+const countyPulse = [
+  { county: "Nairobi", exposure: 78, value: "KSh 23.4B", projects: 45 },
+  { county: "Mombasa", exposure: 66, value: "KSh 18.2B", projects: 28 },
+  { county: "Kisumu", exposure: 52, value: "KSh 12.1B", projects: 19 },
+  { county: "Nakuru", exposure: 47, value: "KSh 9.8B", projects: 22 },
+]
+
+const integrityPillars = [
   {
-    county: "Nairobi",
-    projects: 45,
-    amountLost: 23.4,
-    urgency: "high",
+    title: "Project Intelligence",
+    description: "Track delivery status, budgets, and contractors in one verified registry.",
   },
   {
-    county: "Mombasa",
-    projects: 28,
-    amountLost: 18.2,
-    urgency: "high",
+    title: "Leadership Watch",
+    description: "Surface allegations, court filings, and audit trails for public officials.",
   },
   {
-    county: "Kisumu",
-    projects: 19,
-    amountLost: 12.1,
-    urgency: "medium",
-  },
-  {
-    county: "Nakuru",
-    projects: 22,
-    amountLost: 9.8,
-    urgency: "medium",
+    title: "Citizen Evidence",
+    description: "Collect geo-tagged reports with supporting documentation and verification tags.",
   },
 ]
 
-const sectorBreakdown = [
-  { sector: "Transport", projects: 89, amount: 45.2, percentage: 29 },
-  { sector: "Health", projects: 67, amount: 34.1, percentage: 22 },
-  { sector: "Education", projects: 78, amount: 28.7, percentage: 18 },
-  { sector: "Water", projects: 45, amount: 25.3, percentage: 16 },
-  { sector: "Energy", projects: 34, amount: 23.4, percentage: 15 },
+const sectorSignals = [
+  { sector: "Transport", percent: 29, value: "KSh 45.2B" },
+  { sector: "Health", percent: 22, value: "KSh 34.1B" },
+  { sector: "Education", percent: 18, value: "KSh 28.7B" },
+  { sector: "Water", percent: 16, value: "KSh 25.3B" },
+  { sector: "Energy", percent: 15, value: "KSh 23.4B" },
 ]
 
-export default function Homepage() {
+const totalStateHouseFlagged = stateHouseExpenditures.reduce((acc, item) => acc + item.amountMillions, 0)
+const stateHouseRiskAverage = stateHouseExpenditures.length
+  ? Math.round(stateHouseExpenditures.reduce((acc, item) => acc + item.risk, 0) / stateHouseExpenditures.length)
+  : 0
+
+const stateHouseOverview = [
+  {
+    label: "Flagged spend",
+    value: `KSh ${formatNumber(Math.round(totalStateHouseFlagged))}M`,
+    context: "Unauthorized withdrawals and unsupported vouchers",
+  },
+  {
+    label: "Active cases",
+    value: `${stateHouseExpenditures.length}`,
+    context: "Audit findings under review",
+  },
+  {
+    label: "Avg risk score",
+    value: `${stateHouseRiskAverage}%`,
+    context: "Based on audit severity",
+  },
+]
+
+const formatStateHouseAmount = (value: number) => `KSh ${formatNumber(Math.round(value))}M`
+
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
-        <div className="container mx-auto px-4 py-16">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">Kenya Accountability Tracker</h1>
-            <p className="text-xl md:text-2xl mb-8 text-blue-100">
-              Monitoring public projects and leadership accountability across all 47 counties
-            </p>
-
-            {/* Key Impact Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
-              <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-yellow-300">{platformStats.stalledProjects}</div>
-                <div className="text-blue-100">Stalled Projects</div>
+    <div className="min-h-screen">
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute -left-20 top-10 h-64 w-64 rounded-full bg-emerald-500/15 blur-3xl" />
+          <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-amber-400/20 blur-3xl" />
+          <div className="absolute bottom-0 left-1/3 h-40 w-40 rounded-full bg-orange-400/20 blur-2xl" />
+        </div>
+        <div className="container mx-auto px-4 pb-12 pt-16">
+          <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+            <div className="space-y-6">
+              <Badge className="bg-foreground text-background shadow-sm">National Integrity Dashboard</Badge>
+              <h1 className="font-display text-4xl leading-tight text-foreground md:text-6xl">
+                Kenya Accountability Tracker
+              </h1>
+              <p className="max-w-xl text-lg text-muted-foreground md:text-xl">
+                Monitor public spending, stalled projects, and leadership integrity with a single, verified source of
+                truth for all 47 counties.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/projects">
+                  <Button size="lg">
+                    <Search className="mr-2 h-4 w-4" />
+                    Explore projects
+                  </Button>
+                </Link>
+                <Link href="/report">
+                  <Button size="lg" variant="outline">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Submit evidence
+                  </Button>
+                </Link>
+                <Link href="/analytics">
+                  <Button size="lg" variant="ghost" className="text-foreground hover:bg-foreground/5">
+                    View analytics
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
               </div>
-              <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-red-300">KSh {platformStats.totalLoss}B</div>
-                <div className="text-blue-100">Funds Lost</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-orange-300">{platformStats.activeCases}</div>
-                <div className="text-blue-100">Active Cases</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-green-300">{platformStats.verifiedReports}</div>
-                <div className="text-blue-100">Citizen Reports</div>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-emerald-600" />
+                  Verified public records
+                </span>
+                <span className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-amber-600" />
+                  Citizen-led reporting
+                </span>
               </div>
             </div>
-
-            {/* Call to Action */}
-            <div className="flex flex-col md:flex-row gap-4 justify-center">
-              <Link href="/projects">
-                <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
-                  <Search className="w-5 h-5 mr-2" />
-                  Explore Projects
-                </Button>
-              </Link>
-              <Link href="/report">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-white text-white hover:bg-white hover:text-blue-600"
-                >
-                  <FileText className="w-5 h-5 mr-2" />
-                  Report an Issue
-                </Button>
-              </Link>
+            <div className="relative">
+              <div className="absolute -top-6 right-4 hidden h-24 w-24 rounded-3xl border border-foreground/10 bg-white/70 shadow-sm md:block" />
+              <Card className="relative border-foreground/10 bg-white/80 shadow-lg backdrop-blur">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">Integrity snapshot</CardTitle>
+                    <Badge variant="outline" className="border-foreground/20 text-foreground">
+                      Updated today
+                    </Badge>
+                  </div>
+                  <CardDescription>Live risk exposure and verified cases.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  {headlineStats.map((stat) => (
+                    <div key={stat.label} className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">{stat.label}</p>
+                        <p className="text-xl font-semibold text-foreground">{stat.value}</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{stat.note}</span>
+                    </div>
+                  ))}
+                  <div className="rounded-2xl border border-foreground/10 bg-foreground/5 p-4">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <TrendingDown className="h-4 w-4 text-emerald-600" />
+                      <span>18% recovery rate in Q2</span>
+                    </div>
+                    <p className="mt-1 text-lg font-semibold text-foreground">KSh 12.4B recovered</p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-12">
-        {/* Recent Updates Section */}
-        <section className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold">Recent Updates</h2>
-            <Link href="/updates">
-              <Button variant="outline">
-                View All <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {recentUpdates.map((update) => (
-              <Card key={update.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <Badge
-                      variant={
-                        update.status === "cancelled"
-                          ? "destructive"
-                          : update.status === "charged"
-                            ? "secondary"
-                            : "default"
-                      }
-                    >
-                      {update.status === "cancelled"
-                        ? "Project Cancelled"
-                        : update.status === "charged"
-                          ? "Leader Charged"
-                          : "Project Resumed"}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">{new Date(update.date).toLocaleDateString()}</span>
-                  </div>
-                  <CardTitle className="text-lg">{update.title}</CardTitle>
-                  <CardDescription>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        {update.location}
-                      </div>
-                      <div className="flex items-center">
-                        <DollarSign className="w-4 h-4 mr-1" />
-                        {update.amount}
-                      </div>
-                    </div>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Source: {update.source}</span>
-                    <Button variant="ghost" size="sm">
-                      <Eye className="w-4 h-4 mr-1" />
-                      View Details
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* Critical Issues by County */}
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold mb-6">Counties with Critical Issues</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {criticalIssues.map((issue) => (
-              <Card key={issue.county}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{issue.county} County</CardTitle>
-                    <AlertTriangle
-                      className={`w-5 h-5 ${issue.urgency === "high" ? "text-red-500" : "text-yellow-500"}`}
-                    />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Stalled Projects</span>
-                      <span className="font-semibold">{issue.projects}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Amount Lost</span>
-                      <span className="font-semibold text-red-600">KSh {issue.amountLost}B</span>
-                    </div>
+      <section className="container mx-auto px-4 py-12">
+        <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+          <Card className="border-foreground/10 bg-white/90 shadow-sm">
+            <CardHeader className="flex flex-row items-start justify-between">
+              <div>
+                <CardTitle>Live signals</CardTitle>
+                <CardDescription>Verified updates from audits and oversight bodies.</CardDescription>
+              </div>
+              <Badge variant="outline" className="border-foreground/20 text-foreground">
+                Last 72 hours
+              </Badge>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {liveSignals.map((signal) => (
+                <div key={signal.title} className="rounded-2xl border border-foreground/10 bg-background p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Urgency Level</span>
-                        <span className="capitalize">{issue.urgency}</span>
+                      <p className="text-sm text-muted-foreground">{signal.label}</p>
+                      <p className="font-semibold text-foreground">{signal.title}</p>
+                      <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {signal.county}
+                        </span>
+                        <span>{signal.amount}</span>
                       </div>
-                      <Progress
-                        value={issue.urgency === "high" ? 80 : 50}
-                        className={`h-2 ${issue.urgency === "high" ? "[&>div]:bg-red-500" : "[&>div]:bg-yellow-500"}`}
-                      />
                     </div>
-                    <Link href={`/county/${issue.county.toLowerCase()}`}>
-                      <Button variant="outline" size="sm" className="w-full">
-                        View County Details
-                      </Button>
-                    </Link>
+                    <Badge className="bg-foreground text-background">{signal.status}</Badge>
                   </div>
-                </CardContent>
+                </div>
+              ))}
+              <Link href="/projects">
+                <Button variant="outline" className="w-full">
+                  Review full project list
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="border-foreground/10 bg-white/90 shadow-sm">
+            <CardHeader>
+              <CardTitle>County pulse</CardTitle>
+              <CardDescription>Highest exposure counties by stalled project value.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {countyPulse.map((item) => (
+                <div key={item.county} className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium text-foreground">{item.county}</span>
+                    <span className="text-muted-foreground">
+                      {item.projects} projects | {item.value}
+                    </span>
+                  </div>
+                  <Progress value={item.exposure} className="h-2 bg-foreground/10" />
+                </div>
+              ))}
+              <Link href="/analytics">
+                <Button className="w-full">
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  Explore analytics
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      <section className="container mx-auto px-4 py-10">
+        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div className="space-y-4">
+            <Badge variant="outline" className="border-foreground/20 text-foreground">
+              Accountability stack
+            </Badge>
+            <h2 className="font-display text-3xl text-foreground md:text-4xl">
+              A single source of truth for public project integrity.
+            </h2>
+            <p className="text-muted-foreground">
+              Connect official audits, citizen submissions, and media investigations into one integrated evidence
+              stream. Get instant visibility into where funds stall and accountability follows.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {integrityPillars.map((pillar) => (
+              <Card key={pillar.title} className="border-foreground/10 bg-white/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg">{pillar.title}</CardTitle>
+                  <CardDescription>{pillar.description}</CardDescription>
+                </CardHeader>
               </Card>
             ))}
+            <Card className="border-foreground/10 bg-foreground text-background shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg">Rapid response</CardTitle>
+                <CardDescription className="text-background/80">
+                  Trigger watchdog notifications when high-risk budgets stall.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link href="/report">
+                  <Button variant="secondary" className="w-full bg-background text-foreground hover:bg-white">
+                    Send an alert
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Sector Analysis */}
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold mb-6">Issues by Sector</h2>
-          <Card>
-            <CardContent className="p-6">
-              <div className="space-y-6">
-                {sectorBreakdown.map((sector) => (
-                  <div key={sector.sector} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <h3 className="font-medium">{sector.sector}</h3>
-                        <Badge variant="outline">{sector.projects} projects</Badge>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-semibold">KSh {sector.amount}B</div>
-                        <div className="text-sm text-muted-foreground">{sector.percentage}% of total</div>
-                      </div>
-                    </div>
-                    <Progress value={sector.percentage} className="h-2" />
+      <section className="container mx-auto px-4 py-12">
+        <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+          <Card className="border-foreground/10 bg-white/90 shadow-sm">
+            <CardHeader>
+              <CardTitle>Sector exposure</CardTitle>
+              <CardDescription>Where stalled budgets hit the hardest.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {sectorSignals.map((sector) => (
+                <div key={sector.sector} className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium text-foreground">{sector.sector}</span>
+                    <span className="text-muted-foreground">{sector.value}</span>
+                  </div>
+                  <Progress value={sector.percent} className="h-2 bg-foreground/10" />
+                </div>
+              ))}
+              <Link href="/analytics">
+                <Button variant="outline" className="w-full">
+                  Compare sector reports
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="relative overflow-hidden border-foreground/10 bg-foreground text-background shadow-sm">
+            <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+            <CardHeader>
+              <Badge className="w-fit bg-white/10 text-background">Priority Watchlist</Badge>
+              <CardTitle className="text-2xl">Projects needing immediate oversight</CardTitle>
+              <CardDescription className="text-background/80">
+                High-value initiatives with repeated delays and risk flags.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-sm text-background/70">Nairobi Transport</p>
+                <p className="text-lg font-semibold">BRT Corridor 2</p>
+                <p className="text-xs text-background/60">KSh 15.2B | 14 months stalled</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-sm text-background/70">Mombasa Water</p>
+                <p className="text-lg font-semibold">Mainland Reservoir Upgrade</p>
+                <p className="text-xs text-background/60">KSh 8.7B | 9 months delayed</p>
+              </div>
+              <Link href="/stalled-projects">
+                <Button className="w-full bg-white text-foreground hover:bg-white/90">
+                  View stalled projects
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      <section className="container mx-auto px-4 py-12">
+        <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+          <Card className="border-foreground/10 bg-white/90 shadow-sm">
+            <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <Badge className="bg-foreground text-background">State House Expenditures</Badge>
+                <CardTitle className="mt-3 text-2xl">New category under active review</CardTitle>
+                <CardDescription>
+                  Tracking withdrawals, protocol spending, and procurement that fall outside legal thresholds.
+                </CardDescription>
+              </div>
+              <Badge variant="outline" className="border-foreground/20 text-foreground">
+                Early access
+              </Badge>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-3 sm:grid-cols-3">
+                {stateHouseOverview.map((item) => (
+                  <div key={item.label} className="rounded-2xl border border-foreground/10 bg-background p-4">
+                    <p className="text-sm text-muted-foreground">{item.label}</p>
+                    <p className="text-2xl font-semibold text-foreground">{item.value}</p>
+                    <p className="text-xs text-muted-foreground">{item.context}</p>
                   </div>
                 ))}
               </div>
-              <div className="mt-6 pt-6 border-t">
-                <Link href="/analytics">
-                  <Button className="w-full">
-                    <BarChart3 className="w-4 h-4 mr-2" />
-                    View Detailed Analytics
+              <div className="rounded-2xl border border-foreground/10 bg-foreground/5 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                  <span className="font-medium text-foreground">Compliance gap snapshot</span>
+                  <span className="text-muted-foreground">Risk-weighted exposure</span>
+                </div>
+                <div className="mt-4 space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Unapproved withdrawals</span>
+                      <span>82%</span>
+                    </div>
+                    <Progress value={82} className="h-2 bg-foreground/10" />
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Missing support documents</span>
+                      <span>71%</span>
+                    </div>
+                    <Progress value={71} className="h-2 bg-foreground/10" />
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Procurement anomalies</span>
+                      <span>64%</span>
+                    </div>
+                    <Progress value={64} className="h-2 bg-foreground/10" />
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                  <Badge variant="outline" className="border-foreground/20">
+                    Snapshot only
+                  </Badge>
+                  <span>Detailed evidence and receipts to follow once data is finalized.</span>
+                </div>
+              </div>
+              <Link href="/analytics?tab=statehouse">
+                <Button variant="outline" className="w-full">
+                  Open full analytics
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="border-foreground/10 bg-white/90 shadow-sm">
+            <CardHeader>
+              <CardTitle>Latest State House issues</CardTitle>
+              <CardDescription>Early signals of non-compliant spend to validate with audit data.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {stateHouseExpenditures.map((item) => (
+                <div key={item.title} className="rounded-2xl border border-foreground/10 bg-background p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm text-muted-foreground">{formatDate(item.date)}</p>
+                      <p className="text-lg font-semibold text-foreground">{item.title}</p>
+                      <p className="text-sm text-muted-foreground">{item.issue}</p>
+                    </div>
+                    <Badge className="bg-foreground text-background">{item.status}</Badge>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{formatStateHouseAmount(item.amountMillions)}</span>
+                    <span>Risk {item.risk}%</span>
+                  </div>
+                  <Progress value={item.risk} className="mt-2 h-2 bg-foreground/10" />
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                    {item.reference ? (
+                      <Link href={item.reference} target="_blank" rel="noreferrer">
+                        <Badge variant="outline" className="border-foreground/20">
+                          Audit reference
+                        </Badge>
+                      </Link>
+                    ) : (
+                      <Badge variant="outline" className="border-amber-200 text-amber-700">
+                        Reference pending
+                      </Badge>
+                    )}
+                    {item.source ? <span>Source: {item.source}</span> : <span>Source pending</span>}
+                  </div>
+                </div>
+              ))}
+              <div className="rounded-2xl border border-foreground/10 bg-foreground/5 p-4 text-sm text-muted-foreground">
+                Data placeholders shown; we will backfill with verified audit references and receipt evidence.
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      <section className="container mx-auto px-4 py-12">
+        <Card className="border-foreground/10 bg-white/90 shadow-sm">
+          <CardContent className="grid gap-8 p-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <div className="space-y-4">
+              <Badge variant="outline" className="border-foreground/20 text-foreground">
+                Community intelligence
+              </Badge>
+              <h3 className="font-display text-3xl text-foreground">
+                Empower citizens to document, verify, and escalate accountability.
+              </h3>
+              <p className="text-muted-foreground">
+                Add evidence, attach images, and keep a public trail of official responses. Each report is verified by
+                our fact-checkers before publication.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/report">
+                  <Button>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    File a report
                   </Button>
                 </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Quick Action Cards */}
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold mb-6">Take Action</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="bg-blue-50 border-blue-200">
-              <CardHeader>
-                <div className="flex items-center">
-                  <Search className="w-8 h-8 text-blue-600 mr-3" />
-                  <div>
-                    <CardTitle className="text-blue-900">Explore Projects</CardTitle>
-                    <CardDescription className="text-blue-700">
-                      Search and filter stalled projects by location
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-blue-800 mb-4">
-                  Browse our database of {platformStats.totalProjects} projects across all counties and constituencies.
-                </p>
-                <Link href="/projects">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700">Start Exploring</Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-green-50 border-green-200">
-              <CardHeader>
-                <div className="flex items-center">
-                  <FileText className="w-8 h-8 text-green-600 mr-3" />
-                  <div>
-                    <CardTitle className="text-green-900">Report an Issue</CardTitle>
-                    <CardDescription className="text-green-700">
-                      Submit evidence of stalled projects or corruption
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-green-800 mb-4">
-                  Help us track accountability by reporting issues in your area. All reports are verified.
-                </p>
-                <Link href="/report">
-                  <Button className="w-full bg-green-600 hover:bg-green-700">Submit Report</Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-purple-50 border-purple-200">
-              <CardHeader>
-                <div className="flex items-center">
-                  <Shield className="w-8 h-8 text-purple-600 mr-3" />
-                  <div>
-                    <CardTitle className="text-purple-900">Leader Profiles</CardTitle>
-                    <CardDescription className="text-purple-700">
-                      Track accountability of governors and MPs
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-purple-800 mb-4">
-                  View detailed profiles, allegations, and track records of public leaders.
-                </p>
                 <Link href="/leaders">
-                  <Button className="w-full bg-purple-600 hover:bg-purple-700">View Leaders</Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-
-        {/* Data Sources Section */}
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold mb-6">Our Data Sources</h2>
-          <Card>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <FileText className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <h3 className="font-medium mb-1">Auditor General</h3>
-                  <p className="text-sm text-muted-foreground">Official audit reports</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <Shield className="w-6 h-6 text-green-600" />
-                  </div>
-                  <h3 className="font-medium mb-1">EACC</h3>
-                  <p className="text-sm text-muted-foreground">Anti-corruption cases</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <Users className="w-6 h-6 text-orange-600" />
-                  </div>
-                  <h3 className="font-medium mb-1">NGO Reports</h3>
-                  <p className="text-sm text-muted-foreground">Civil society research</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <AlertCircle className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <h3 className="font-medium mb-1">Citizen Reports</h3>
-                  <p className="text-sm text-muted-foreground">Verified submissions</p>
-                </div>
-              </div>
-              <div className="mt-6 pt-6 border-t text-center">
-                <p className="text-sm text-muted-foreground mb-4">
-                  Last updated: {new Date(platformStats.lastUpdated).toLocaleDateString()}
-                </p>
-                <Link href="/data-sources">
-                  <Button variant="outline">View All Data Sources</Button>
+                  <Button variant="outline">View leader profiles</Button>
                 </Link>
               </div>
-            </CardContent>
-          </Card>
-        </section>
+            </div>
+            <div className="rounded-3xl border border-foreground/10 bg-foreground/5 p-6">
+              <p className="text-sm text-muted-foreground">Latest citizen report</p>
+              <h4 className="mt-2 text-xl font-semibold text-foreground">Kisumu Regional Hospital Wing</h4>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Procurement stalled after second tender. Site remains idle; equipment in storage.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <Badge variant="outline" className="border-foreground/20">
+                  Health Sector
+                </Badge>
+                <Badge variant="outline" className="border-foreground/20">
+                  Verified
+                </Badge>
+                <span>Updated 2 days ago</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
 
-        {/* Newsletter Signup */}
-        <section className="bg-gray-50 rounded-lg p-8 text-center">
-          <h2 className="text-2xl font-bold mb-4">Stay Informed</h2>
-          <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Get weekly updates on new cases, project status changes, and accountability insights delivered to your
-            inbox.
-          </p>
-          <div className="flex flex-col md:flex-row gap-4 max-w-md mx-auto">
-            <input type="email" placeholder="Enter your email" className="flex-1 px-4 py-2 border rounded-md" />
-            <Button>Subscribe</Button>
-          </div>
-          <p className="text-xs text-muted-foreground mt-4">We respect your privacy. Unsubscribe at any time.</p>
-        </section>
-      </div>
+      <section className="container mx-auto px-4 pb-16">
+        <Card className="border-foreground/10 bg-white/90 shadow-sm">
+          <CardContent className="flex flex-col items-center gap-6 p-8 text-center lg:flex-row lg:justify-between lg:text-left">
+            <div>
+              <h4 className="font-display text-2xl text-foreground">Stay informed with weekly briefs.</h4>
+              <p className="text-muted-foreground">Curated updates on project status shifts and new accountability cases.</p>
+            </div>
+            <div className="flex w-full max-w-md flex-col gap-3 sm:flex-row">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="h-11 flex-1 rounded-full border border-foreground/20 bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/40"
+              />
+              <Button className="h-11">Subscribe</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
     </div>
   )
 }

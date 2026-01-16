@@ -10,8 +10,8 @@ import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SimpleLocationSelector } from "@/components/simple-location-selector"
 import type { County, Constituency } from "@/lib/enhanced-kenya-locations"
+import { formatNumber } from "@/lib/formatters"
 
-// Enhanced leader data
 const leadersData = [
   {
     id: 1,
@@ -175,7 +175,6 @@ export default function LeadersPage() {
   const [sortBy, setSortBy] = useState("score")
 
   const handleLocationChange = (county: County | null, constituency: Constituency | null) => {
-    console.log("Leaders page location change:", { county: county?.name, constituency: constituency?.name })
     setSelectedCounty(county)
     setSelectedConstituency(constituency)
   }
@@ -221,262 +220,238 @@ export default function LeadersPage() {
   const totalBudget = filteredLeaders.reduce((sum, l) => sum + l.budgetManaged, 0)
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Leadership Accountability</h1>
-        <p className="text-muted-foreground">
-          Track the performance and accountability of governors, MPs, and other leaders
-        </p>
-      </div>
-
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center">
-              <Users className="h-8 w-8 text-blue-600 mr-3" />
-              <div>
-                <div className="text-2xl font-bold">{totalLeaders}</div>
-                <div className="text-sm text-muted-foreground">Leaders Tracked</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center">
-              <AlertTriangle className="h-8 w-8 text-red-600 mr-3" />
-              <div>
-                <div className="text-2xl font-bold">{leadersWithAllegations}</div>
-                <div className="text-sm text-muted-foreground">With Allegations</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center">
-              <Shield className="h-8 w-8 text-green-600 mr-3" />
-              <div>
-                <div className="text-2xl font-bold">{averageScore}</div>
-                <div className="text-sm text-muted-foreground">Avg. Score</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center">
-              <div className="h-8 w-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
-                <span className="text-purple-600 font-bold text-sm">KSh</span>
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{(totalBudget / 1000000000).toFixed(0)}B</div>
-                <div className="text-sm text-muted-foreground">Total Budget</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Filter className="w-5 h-5 mr-2" />
-            Filter Leaders
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Search Leaders</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Location</label>
-              <SimpleLocationSelector onLocationChange={handleLocationChange} placeholder="Select location..." />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Position</label>
-              <Select value={selectedPosition} onValueChange={setSelectedPosition}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {positions.map((position) => (
-                    <SelectItem key={position} value={position}>
-                      {position}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Party</label>
-              <Select value={selectedParty} onValueChange={setSelectedParty}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {parties.map((party) => (
-                    <SelectItem key={party} value={party}>
-                      {party}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Sort By</label>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="score">Accountability Score</SelectItem>
-                  <SelectItem value="allegations">Allegations (Low to High)</SelectItem>
-                  <SelectItem value="budget">Budget Managed</SelectItem>
-                  <SelectItem value="name">Name (A-Z)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Leaders Grid */}
-      {sortedLeaders.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Users className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No leaders found</h3>
-            <p className="text-muted-foreground text-center">
-              Try adjusting your search criteria or filters to find leaders.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sortedLeaders.map((leader) => (
-            <Card key={leader.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
-                    <Users className="w-8 h-8 text-gray-500" />
+    <div className="min-h-screen">
+      <section className="container mx-auto px-4 pt-10">
+        <div className="rounded-3xl border border-foreground/10 bg-white/80 p-8 shadow-sm">
+          <Badge className="bg-foreground text-background">Leadership accountability</Badge>
+          <h1 className="mt-4 font-display text-3xl text-foreground md:text-4xl">Leadership Intelligence</h1>
+          <p className="mt-2 max-w-2xl text-muted-foreground">
+            Track the performance and accountability of governors, MPs, and other leaders across all counties.
+          </p>
+          <div className="mt-6 grid gap-4 md:grid-cols-4">
+            {[
+              { label: "Leaders tracked", value: totalLeaders, icon: Users },
+              { label: "With allegations", value: leadersWithAllegations, icon: AlertTriangle },
+              { label: "Average score", value: averageScore, icon: Shield },
+              { label: "Total budget", value: `KSh ${formatNumber(Math.round(totalBudget / 1000000000))}B`, icon: Users },
+            ].map((stat) => (
+              <Card key={stat.label} className="border-foreground/10 bg-white/90 shadow-sm">
+                <CardContent className="flex items-center gap-3 p-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-foreground/5">
+                    <stat.icon className="h-5 w-5 text-foreground" />
                   </div>
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">{leader.name}</CardTitle>
-                    <CardDescription>
-                      <div className="space-y-1">
+                  <div>
+                    <div className="text-xl font-semibold text-foreground">{stat.value}</div>
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground">{stat.label}</div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="container mx-auto px-4 py-8">
+        <Card className="border-foreground/10 bg-white/90 shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              Filter leaders
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Search leaders
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Location
+                </label>
+                <SimpleLocationSelector onLocationChange={handleLocationChange} placeholder="Select location" />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Position
+                </label>
+                <Select value={selectedPosition} onValueChange={setSelectedPosition}>
+                  <SelectTrigger className="rounded-full border-foreground/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {positions.map((position) => (
+                      <SelectItem key={position} value={position}>
+                        {position}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Party
+                </label>
+                <Select value={selectedParty} onValueChange={setSelectedParty}>
+                  <SelectTrigger className="rounded-full border-foreground/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {parties.map((party) => (
+                      <SelectItem key={party} value={party}>
+                        {party}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Sort by
+                </label>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="rounded-full border-foreground/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="score">Accountability score</SelectItem>
+                    <SelectItem value="allegations">Allegations (low to high)</SelectItem>
+                    <SelectItem value="budget">Budget managed</SelectItem>
+                    <SelectItem value="name">Name (A-Z)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="container mx-auto px-4 pb-12">
+        {sortedLeaders.length === 0 ? (
+          <Card className="border-foreground/10 bg-white/90 shadow-sm">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Users className="mb-4 h-12 w-12 text-muted-foreground" />
+              <h3 className="text-lg font-medium text-foreground">No leaders found</h3>
+              <p className="text-muted-foreground text-center">
+                Try adjusting your search criteria or filters to find leaders.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {sortedLeaders.map((leader) => (
+              <Card key={leader.id} className="border-foreground/10 bg-white/90 shadow-sm">
+                <CardHeader>
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full border border-foreground/10 bg-foreground/5">
+                      <Users className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-lg text-foreground">{leader.name}</CardTitle>
+                      <CardDescription className="space-y-1">
                         <div>{leader.position}</div>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-3 h-3" />
-                          <span className="text-xs">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <MapPin className="h-3 w-3" />
+                          <span>
                             {leader.constituency === "County-wide"
                               ? `${leader.county} County`
                               : `${leader.constituency}, ${leader.county}`}
                           </span>
                         </div>
-                      </div>
-                    </CardDescription>
+                      </CardDescription>
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-2 mt-2">
-                  <Badge variant="outline">{leader.party}</Badge>
-                  <Badge variant={leader.allegations === 0 ? "default" : "destructive"}>
-                    {leader.allegations === 0
-                      ? "Clean Record"
-                      : `${leader.allegations} Allegation${leader.allegations > 1 ? "s" : ""}`}
-                  </Badge>
-                </div>
-              </CardHeader>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <Badge variant="outline" className="border-foreground/20 text-foreground">
+                      {leader.party}
+                    </Badge>
+                    <Badge variant={leader.allegations === 0 ? "default" : "destructive"}>
+                      {leader.allegations === 0
+                        ? "Clean record"
+                        : `${leader.allegations} allegation${leader.allegations > 1 ? "s" : ""}`}
+                    </Badge>
+                  </div>
+                </CardHeader>
 
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Accountability Score */}
+                <CardContent className="space-y-4">
                   <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Accountability Score</span>
+                    <div className="flex justify-between text-sm">
+                      <span>Accountability score</span>
                       <span>{leader.accountabilityScore}/100</span>
                     </div>
-                    <Progress value={leader.accountabilityScore} className="h-2" />
+                    <Progress value={leader.accountabilityScore} className="mt-2 h-2 bg-foreground/10" />
                   </div>
 
-                  {/* Key Stats */}
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <div className="text-muted-foreground">Projects</div>
-                      <div className="font-semibold">{leader.projectsOverseen}</div>
+                      <div className="font-semibold text-foreground">{leader.projectsOverseen}</div>
                     </div>
                     <div>
                       <div className="text-muted-foreground">Budget</div>
-                      <div className="font-semibold">KSh {(leader.budgetManaged / 1000000000).toFixed(1)}B</div>
+                      <div className="font-semibold text-foreground">
+                        KSh {(leader.budgetManaged / 1000000000).toFixed(1)}B
+                      </div>
                     </div>
                     <div>
                       <div className="text-muted-foreground">Term</div>
-                      <div className="font-semibold">{leader.term}</div>
+                      <div className="font-semibold text-foreground">{leader.term}</div>
                     </div>
                     <div>
                       <div className="text-muted-foreground">Party</div>
-                      <div className="font-semibold">{leader.party}</div>
+                      <div className="font-semibold text-foreground">{leader.party}</div>
                     </div>
                   </div>
 
-                  {/* Recent Actions */}
                   <div>
-                    <h4 className="text-sm font-medium mb-2">Recent Actions</h4>
-                    <ul className="text-xs text-muted-foreground space-y-1">
-                      {leader.recentActions.slice(0, 2).map((action, index) => (
-                        <li key={index} className="flex items-start">
-                          <div className="w-1 h-1 rounded-full bg-blue-500 mt-2 mr-2 flex-shrink-0" />
-                          <span>{action}</span>
+                    <h4 className="text-sm font-medium text-foreground mb-2">Recent actions</h4>
+                    <ul className="space-y-1 text-xs text-muted-foreground">
+                      {leader.recentActions.slice(0, 2).map((action) => (
+                        <li key={action} className="flex items-start">
+                          <div className="mt-2 h-1 w-1 rounded-full bg-foreground/60" />
+                          <span className="ml-2">{action}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
 
-                  {/* Contact Info */}
-                  <div className="flex items-center gap-2 pt-2 border-t">
+                  <div className="flex items-center gap-2 border-t border-foreground/10 pt-2">
                     <Button variant="ghost" size="sm" className="flex-1">
-                      <Phone className="w-3 h-3 mr-1" />
+                      <Phone className="mr-1 h-3 w-3" />
                       Contact
                     </Button>
                     <Button variant="ghost" size="sm" className="flex-1">
-                      <ExternalLink className="w-3 h-3 mr-1" />
+                      <ExternalLink className="mr-1 h-3 w-3" />
                       Profile
                     </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
-      {/* Load More */}
-      {sortedLeaders.length > 0 && (
-        <div className="mt-8 text-center">
-          <Button variant="outline">Load More Leaders</Button>
-        </div>
-      )}
+        {sortedLeaders.length > 0 && (
+          <div className="mt-8 text-center">
+            <Button variant="outline">Load more leaders</Button>
+          </div>
+        )}
+      </section>
     </div>
   )
 }

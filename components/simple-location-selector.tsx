@@ -23,7 +23,7 @@ interface SimpleLocationSelectorProps {
 
 export function SimpleLocationSelector({
   onLocationChange,
-  placeholder = "Select location...",
+  placeholder = "Select location",
   className,
 }: SimpleLocationSelectorProps) {
   const [open, setOpen] = useState(false)
@@ -33,7 +33,6 @@ export function SimpleLocationSelector({
   const [mode, setMode] = useState<"county" | "constituency">("county")
 
   const handleCountySelect = (county: County) => {
-    console.log("County selected:", county.name)
     setSelectedCounty(county)
     setSelectedConstituency(null)
     setSearchValue("")
@@ -42,7 +41,6 @@ export function SimpleLocationSelector({
   }
 
   const handleConstituencySelect = (constituency: Constituency) => {
-    console.log("Constituency selected:", constituency.name)
     const county = getCountyById(constituency.countyId)
     setSelectedCounty(county || null)
     setSelectedConstituency(constituency)
@@ -52,7 +50,6 @@ export function SimpleLocationSelector({
   }
 
   const clearSelection = () => {
-    console.log("Clearing selection")
     setSelectedCounty(null)
     setSelectedConstituency(null)
     setSearchValue("")
@@ -79,26 +76,31 @@ export function SimpleLocationSelector({
     <div className={cn("flex flex-col gap-2", className)}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" role="combobox" aria-expanded={open} className="justify-between">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="justify-between rounded-full border-foreground/20 bg-background"
+          >
+            <div className="flex min-w-0 flex-1 items-center gap-2">
               <MapPin className="h-4 w-4 flex-shrink-0" />
               {selectedConstituency ? (
-                <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
                   <span className="truncate">{selectedConstituency.name}</span>
-                  <Badge variant="outline" className="text-xs flex-shrink-0">
+                  <Badge variant="outline" className="border-foreground/20 text-xs text-foreground">
                     {selectedCounty?.name}
                   </Badge>
                 </div>
               ) : selectedCounty ? (
                 <span className="truncate">{selectedCounty.name} County</span>
               ) : (
-                <span className="text-muted-foreground truncate">{placeholder}</span>
+                <span className="truncate text-muted-foreground">{placeholder}</span>
               )}
             </div>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[350px] p-0">
+        <PopoverContent className="w-[350px] rounded-2xl border-foreground/10 bg-background p-0 shadow-lg">
           <Command shouldFilter={false}>
             <CommandInput
               placeholder={mode === "county" ? "Search counties..." : "Search constituencies..."}
@@ -108,16 +110,14 @@ export function SimpleLocationSelector({
             <CommandList>
               <CommandEmpty>No {mode === "county" ? "counties" : "constituencies"} found.</CommandEmpty>
 
-              {/* Navigation */}
               {selectedCounty && mode === "constituency" && (
                 <CommandGroup>
                   <CommandItem onSelect={resetToCountyMode} className="text-muted-foreground">
-                    ← Back to counties
+                    Back to counties
                   </CommandItem>
                 </CommandGroup>
               )}
 
-              {/* Counties */}
               {mode === "county" && (
                 <CommandGroup heading="Counties">
                   {filteredCounties.map((county) => (
@@ -125,9 +125,9 @@ export function SimpleLocationSelector({
                       <Check
                         className={cn("mr-2 h-4 w-4", selectedCounty?.id === county.id ? "opacity-100" : "opacity-0")}
                       />
-                      <div className="flex items-center justify-between w-full">
+                      <div className="flex w-full items-center justify-between">
                         <span>{county.name}</span>
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="border-foreground/20 text-xs text-foreground">
                           {county.constituencies.length} constituencies
                         </Badge>
                       </div>
@@ -136,7 +136,6 @@ export function SimpleLocationSelector({
                 </CommandGroup>
               )}
 
-              {/* Constituencies */}
               {mode === "constituency" && selectedCounty && (
                 <CommandGroup heading={`Constituencies in ${selectedCounty.name}`}>
                   {availableConstituencies.map((constituency) => (
@@ -161,9 +160,8 @@ export function SimpleLocationSelector({
         </PopoverContent>
       </Popover>
 
-      {/* Clear button */}
       {(selectedCounty || selectedConstituency) && (
-        <Button variant="ghost" size="sm" onClick={clearSelection} className="h-6 px-2 text-xs self-start">
+        <Button variant="ghost" size="sm" onClick={clearSelection} className="h-6 self-start px-2 text-xs">
           Clear selection
         </Button>
       )}

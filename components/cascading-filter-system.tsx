@@ -14,6 +14,7 @@ import {
   type County,
   type Constituency,
 } from "@/lib/enhanced-kenya-locations"
+import { formatNumber } from "@/lib/formatters"
 
 interface CascadingFilterSystemProps {
   onFilterChange: (county: County | null, constituency: Constituency | null) => void
@@ -100,14 +101,14 @@ export function CascadingFilterSystem({ onFilterChange, className, disabled = fa
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* County Dropdown */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">County</label>
+          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">County</label>
           <Popover open={countyOpen} onOpenChange={setCountyOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 role="combobox"
                 aria-expanded={countyOpen}
-                className="w-full justify-between"
+                className="w-full justify-between rounded-full border-foreground/20 bg-background"
                 disabled={disabled}
               >
                 {selectedCounty ? (
@@ -121,7 +122,7 @@ export function CascadingFilterSystem({ onFilterChange, className, disabled = fa
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[300px] p-0" align="start">
+            <PopoverContent className="w-[300px] rounded-2xl border-foreground/10 bg-background p-0 shadow-lg" align="start">
               <Command>
                 <CommandInput
                   placeholder="Search counties..."
@@ -150,7 +151,7 @@ export function CascadingFilterSystem({ onFilterChange, className, disabled = fa
                               </span>
                             )}
                           </div>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="border-foreground/20 text-xs text-foreground">
                             {county.constituencies.length} constituencies
                           </Badge>
                         </div>
@@ -165,14 +166,14 @@ export function CascadingFilterSystem({ onFilterChange, className, disabled = fa
 
         {/* Constituency Dropdown */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Constituency</label>
+          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Constituency</label>
           <Popover open={constituencyOpen} onOpenChange={setConstituencyOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 role="combobox"
                 aria-expanded={constituencyOpen}
-                className="w-full justify-between"
+                className="w-full justify-between rounded-full border-foreground/20 bg-background"
                 disabled={disabled || !selectedCounty || isLoading}
               >
                 {isLoading ? (
@@ -193,7 +194,7 @@ export function CascadingFilterSystem({ onFilterChange, className, disabled = fa
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[300px] p-0" align="start">
+            <PopoverContent className="w-[300px] rounded-2xl border-foreground/10 bg-background p-0 shadow-lg" align="start">
               <Command>
                 <CommandInput
                   placeholder="Search constituencies..."
@@ -222,7 +223,7 @@ export function CascadingFilterSystem({ onFilterChange, className, disabled = fa
                               <span>{constituency.name}</span>
                               {constituency.population && (
                                 <span className="text-xs text-muted-foreground">
-                                  {constituency.population.toLocaleString()} people
+                                  {formatNumber(constituency.population)} people
                                 </span>
                               )}
                             </div>
@@ -239,12 +240,12 @@ export function CascadingFilterSystem({ onFilterChange, className, disabled = fa
 
         {/* Clear Filters Button */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700 opacity-0">Actions</label>
+          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground opacity-0">Actions</label>
           <Button
             variant="outline"
             onClick={clearFilters}
             disabled={!selectedCounty && !selectedConstituency}
-            className="w-full"
+            className="w-full rounded-full border-foreground/20"
           >
             <X className="h-4 w-4 mr-2" />
             Clear Filters
@@ -254,25 +255,25 @@ export function CascadingFilterSystem({ onFilterChange, className, disabled = fa
 
       {/* Filter Summary */}
       {(selectedCounty || selectedConstituency) && (
-        <Card className="bg-blue-50 border-blue-200">
+        <Card className="border-foreground/10 bg-foreground/5">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 flex-wrap">
-              <Filter className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-900">Active Filters:</span>
+              <Filter className="h-4 w-4 text-foreground" />
+              <span className="text-sm font-medium text-foreground">Active filters:</span>
 
               {selectedCounty && (
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-300">
+                <Badge variant="outline" className="border-foreground/20 text-foreground">
                   County: {selectedCounty.name}
                 </Badge>
               )}
 
               {selectedConstituency && (
-                <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300">
+                <Badge variant="outline" className="border-foreground/20 text-foreground">
                   Constituency: {selectedConstituency.name}
                 </Badge>
               )}
 
-              <span className="text-sm text-blue-700">
+              <span className="text-sm text-muted-foreground">
                 {selectedConstituency
                   ? `Showing projects in ${selectedConstituency.name}, ${selectedCounty?.name}`
                   : selectedCounty
@@ -286,11 +287,11 @@ export function CascadingFilterSystem({ onFilterChange, className, disabled = fa
 
       {/* Loading State */}
       {isLoading && (
-        <Card className="bg-gray-50 border-gray-200">
+        <Card className="border-foreground/10 bg-white/80">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-gray-600" />
-              <span className="text-sm text-gray-600">
+              <Loader2 className="h-4 w-4 animate-spin text-foreground" />
+              <span className="text-sm text-muted-foreground">
                 {selectedConstituency ? "Loading projects..." : "Loading constituencies..."}
               </span>
             </div>

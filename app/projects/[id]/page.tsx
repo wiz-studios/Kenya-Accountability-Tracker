@@ -3,29 +3,28 @@
 import { useState } from "react"
 import {
   ArrowLeft,
-  MapPin,
+  AlertTriangle,
+  Building,
   Calendar,
   DollarSign,
-  Users,
-  FileText,
-  AlertTriangle,
   ExternalLink,
-  Share2,
+  FileText,
   Flag,
-  Building,
+  MapPin,
+  Share2,
   User,
-  Download,
+  Users,
 } from "lucide-react"
+import Link from "next/link"
+import Image from "next/image"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import Link from "next/link"
-import Image from "next/image"
+import { formatDate, formatYear } from "@/lib/formatters"
 
-// Mock detailed project data
 const projectDetail = {
   id: 1,
   name: "Nairobi BRT System Phase 1",
@@ -50,8 +49,6 @@ const projectDetail = {
   urgency: "high",
   mp: "Hon. Timothy Wanyonyi",
   governor: "Johnson Sakaja",
-
-  // Detailed timeline
   timeline: [
     {
       date: "2019-03-15",
@@ -120,8 +117,6 @@ const projectDetail = {
       description: "Work completely halted pending resolution",
     },
   ],
-
-  // Documents
   documents: [
     { name: "Project Proposal.pdf", size: "2.3 MB", date: "2019-01-15", type: "proposal" },
     { name: "Environmental Impact Assessment.pdf", size: "4.1 MB", date: "2019-06-20", type: "environmental" },
@@ -129,8 +124,6 @@ const projectDetail = {
     { name: "Budget Revision 2022.pdf", size: "890 KB", date: "2022-01-15", type: "budget" },
     { name: "NEMA Report 2024.pdf", size: "3.2 MB", date: "2024-08-15", type: "compliance" },
   ],
-
-  // Financial breakdown
   financialBreakdown: [
     { category: "Infrastructure Development", allocated: 25000000000, spent: 7500000000 },
     { category: "Land Acquisition", allocated: 8000000000, spent: 3200000000 },
@@ -138,15 +131,11 @@ const projectDetail = {
     { category: "Design & Supervision", allocated: 3200000000, spent: 800000000 },
     { category: "Contingency", allocated: 3000000000, spent: 100000000 },
   ],
-
-  // Images
   images: [
-    { url: "/placeholder.svg?height=400&width=600", caption: "Construction site showing incomplete bus station" },
-    { url: "/placeholder.svg?height=400&width=600", caption: "Stalled construction of dedicated bus lanes" },
-    { url: "/placeholder.svg?height=400&width=600", caption: "Original project design visualization" },
+    { url: "/placeholder.svg?height=640&width=960", caption: "Construction site showing incomplete bus station" },
+    { url: "/placeholder.svg?height=640&width=960", caption: "Stalled construction of dedicated bus lanes" },
+    { url: "/placeholder.svg?height=640&width=960", caption: "Original project design visualization" },
   ],
-
-  // Related news/updates
   relatedNews: [
     {
       title: "BRT Project Faces Further Delays as Contractor Demands Payment",
@@ -175,424 +164,414 @@ interface ProjectDetailPageProps {
   }
 }
 
-export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
+export default function ProjectDetailPage({ params: _params }: ProjectDetailPageProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const selectedImage = projectDetail.images[selectedImageIndex]
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-4 mb-4">
+    <div className="min-h-screen">
+      <section className="container mx-auto px-4 pt-10">
+        <div className="flex flex-wrap items-center gap-3">
           <Link href="/projects">
             <Button variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Projects
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to projects
             </Button>
           </Link>
           <div className="flex-1" />
           <Button variant="outline" size="sm">
-            <Share2 className="w-4 h-4 mr-2" />
+            <Share2 className="mr-2 h-4 w-4" />
             Share
           </Button>
           <Button variant="outline" size="sm">
-            <Flag className="w-4 h-4 mr-2" />
-            Report Issue
+            <Flag className="mr-2 h-4 w-4" />
+            Report issue
           </Button>
         </div>
 
-        <div className="flex flex-col lg:flex-row lg:items-start gap-6">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-4">
-              <Badge variant="outline">{projectDetail.sector}</Badge>
-              <Badge variant={projectDetail.status === "Stalled" ? "destructive" : "secondary"}>
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="rounded-3xl border border-foreground/10 bg-white/80 p-8 shadow-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className="border-foreground/20 text-foreground">
+                {projectDetail.sector}
+              </Badge>
+              <Badge
+                className={
+                  projectDetail.status === "Stalled"
+                    ? "bg-foreground text-background"
+                    : "bg-foreground/10 text-foreground"
+                }
+              >
                 {projectDetail.status}
               </Badge>
-              {projectDetail.urgency === "high" && <Badge variant="destructive">High Priority</Badge>}
+              {projectDetail.urgency === "high" && (
+                <Badge variant="destructive" className="uppercase tracking-wide">
+                  High Priority
+                </Badge>
+              )}
             </div>
-
-            <h1 className="text-3xl font-bold mb-4">{projectDetail.name}</h1>
-
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <div className="flex items-center">
-                <MapPin className="w-5 h-5 mr-2 text-muted-foreground" />
+            <h1 className="mt-4 font-display text-3xl text-foreground md:text-4xl">{projectDetail.name}</h1>
+            <p className="mt-3 text-muted-foreground">{projectDetail.description}</p>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <div className="flex items-center gap-3">
+                <MapPin className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <div className="font-medium">{projectDetail.constituency}</div>
-                  <div className="text-sm text-muted-foreground">{projectDetail.county} County</div>
+                  <div className="text-sm font-semibold text-foreground">{projectDetail.constituency}</div>
+                  <div className="text-xs text-muted-foreground">{projectDetail.county} County</div>
                 </div>
               </div>
-              <div className="flex items-center">
-                <Calendar className="w-5 h-5 mr-2 text-muted-foreground" />
+              <div className="flex items-center gap-3">
+                <Calendar className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <div className="font-medium">Started {new Date(projectDetail.startDate).getFullYear()}</div>
-                  <div className="text-sm text-muted-foreground">
-                    Due {new Date(projectDetail.expectedCompletion).getFullYear()}
+                  <div className="text-sm font-semibold text-foreground">Started {formatYear(projectDetail.startDate)}</div>
+                  <div className="text-xs text-muted-foreground">
+                    Due {formatYear(projectDetail.expectedCompletion)}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center">
-                <DollarSign className="w-5 h-5 mr-2 text-muted-foreground" />
+              <div className="flex items-center gap-3">
+                <DollarSign className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <div className="font-medium">KSh {(projectDetail.budget / 1000000000).toFixed(1)}B</div>
-                  <div className="text-sm text-muted-foreground">Total Budget</div>
+                  <div className="text-sm font-semibold text-foreground">
+                    KSh {(projectDetail.budget / 1000000000).toFixed(1)}B
+                  </div>
+                  <div className="text-xs text-muted-foreground">Total budget</div>
                 </div>
               </div>
-              <div className="flex items-center">
-                <Building className="w-5 h-5 mr-2 text-muted-foreground" />
+              <div className="flex items-center gap-3">
+                <Building className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <div className="font-medium">{projectDetail.contractor}</div>
-                  <div className="text-sm text-muted-foreground">Main Contractor</div>
+                  <div className="text-sm font-semibold text-foreground">{projectDetail.contractor}</div>
+                  <div className="text-xs text-muted-foreground">Main contractor</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Key Stats Card */}
-          <Card className="lg:w-80">
+          <Card className="border-foreground/10 bg-white/90 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-lg">Project Status</CardTitle>
+              <CardTitle className="text-lg">Project status</CardTitle>
+              <CardDescription>Progress and spend overview</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="space-y-4">
+              <div>
+                <div className="flex justify-between text-sm">
+                  <span>Progress</span>
+                  <span>{projectDetail.progress}% Complete</span>
+                </div>
+                <Progress value={projectDetail.progress} className="mt-2 h-2 bg-foreground/10" />
+              </div>
+              <div>
+                <div className="flex justify-between text-sm">
+                  <span>Budget spent</span>
+                  <span>{Math.round((projectDetail.spent / projectDetail.budget) * 100)}%</span>
+                </div>
+                <Progress value={(projectDetail.spent / projectDetail.budget) * 100} className="mt-2 h-2 bg-foreground/10" />
+              </div>
+              <Separator />
+              <div className="grid grid-cols-2 gap-4 text-center">
                 <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Progress</span>
-                    <span>{projectDetail.progress}% Complete</span>
+                  <div className="text-2xl font-semibold text-foreground">
+                    KSh {(projectDetail.spent / 1000000000).toFixed(1)}B
                   </div>
-                  <Progress value={projectDetail.progress} className="h-3" />
+                  <div className="text-xs text-muted-foreground">Spent</div>
                 </div>
-
                 <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Budget Spent</span>
-                    <span>{Math.round((projectDetail.spent / projectDetail.budget) * 100)}%</span>
+                  <div className="text-2xl font-semibold text-foreground">
+                    KSh {((projectDetail.budget - projectDetail.spent) / 1000000000).toFixed(1)}B
                   </div>
-                  <Progress value={(projectDetail.spent / projectDetail.budget) * 100} className="h-3" />
+                  <div className="text-xs text-muted-foreground">Remaining</div>
                 </div>
-
-                <Separator />
-
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div>
-                    <div className="text-2xl font-bold text-green-600">
-                      KSh {(projectDetail.spent / 1000000000).toFixed(1)}B
-                    </div>
-                    <div className="text-xs text-muted-foreground">Spent</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-red-600">
-                      KSh {((projectDetail.budget - projectDetail.spent) / 1000000000).toFixed(1)}B
-                    </div>
-                    <div className="text-xs text-muted-foreground">Remaining</div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">Last Updated</div>
-                  <div className="text-sm text-muted-foreground">
-                    {new Date(projectDetail.lastUpdate).toLocaleDateString()}
-                  </div>
-                </div>
+              </div>
+              <Separator />
+              <div>
+                <div className="text-sm font-medium">Last updated</div>
+                <div className="text-sm text-muted-foreground">{formatDate(projectDetail.lastUpdate)}</div>
               </div>
             </CardContent>
           </Card>
         </div>
-      </div>
+      </section>
 
-      {/* Main Content */}
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="timeline">Timeline</TabsTrigger>
-          <TabsTrigger value="financials">Financials</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="accountability">Accountability</TabsTrigger>
-        </TabsList>
+      <section className="container mx-auto px-4 py-10">
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 gap-2 rounded-full bg-foreground/5 p-1 text-foreground/70 lg:grid-cols-5">
+            {["overview", "timeline", "financials", "documents", "accountability"].map((tab) => (
+              <TabsTrigger
+                key={tab}
+                value={tab}
+                className="rounded-full data-[state=active]:bg-foreground data-[state=active]:text-background"
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
-          {/* Project Description */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Project Description</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground leading-relaxed mb-6">{projectDetail.description}</p>
-
-              {/* Project Images */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Project Images</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {projectDetail.images.map((image, index) => (
-                    <div key={index} className="cursor-pointer" onClick={() => setSelectedImageIndex(index)}>
+          <TabsContent value="overview" className="space-y-6">
+            <Card className="border-foreground/10 bg-white/90 shadow-sm">
+              <CardHeader>
+                <CardTitle>Project overview</CardTitle>
+                <CardDescription>Context, imagery, and status detail</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="rounded-2xl border border-foreground/10 bg-foreground/5 p-4">
+                  <p className="text-muted-foreground leading-relaxed">{projectDetail.description}</p>
+                </div>
+                <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+                  <div className="space-y-4">
+                    <div className="relative h-64 overflow-hidden rounded-2xl border border-foreground/10">
                       <Image
-                        src={image.url || "/placeholder.svg"}
-                        alt={image.caption}
-                        width={400}
-                        height={300}
-                        className="rounded-lg object-cover w-full h-48"
+                        src={selectedImage?.url || "/placeholder.svg"}
+                        alt={selectedImage?.caption || "Project image"}
+                        fill
+                        className="object-cover"
                       />
-                      <p className="text-sm text-muted-foreground mt-2">{image.caption}</p>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{selectedImage?.caption}</p>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                    {projectDetail.images.map((image, index) => (
+                      <button
+                        key={image.url}
+                        className={`relative h-20 overflow-hidden rounded-xl border ${
+                          selectedImageIndex === index ? "border-foreground" : "border-foreground/10"
+                        }`}
+                        onClick={() => setSelectedImageIndex(index)}
+                      >
+                        <Image src={image.url} alt={image.caption} fill className="object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-foreground/10 bg-white/90 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-foreground" />
+                  Key issues & challenges
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {projectDetail.issues.map((issue) => (
+                    <div key={issue} className="flex items-start gap-3 rounded-xl border border-foreground/10 bg-background p-3">
+                      <div className="mt-2 h-2 w-2 rounded-full bg-foreground" />
+                      <span className="text-sm text-muted-foreground">{issue}</span>
                     </div>
                   ))}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Key Issues */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <AlertTriangle className="w-5 h-5 mr-2 text-red-500" />
-                Key Issues & Challenges
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {projectDetail.issues.map((issue, index) => (
-                  <div key={index} className="flex items-start">
-                    <div className="w-2 h-2 rounded-full bg-red-500 mt-2 mr-3 flex-shrink-0" />
-                    <span className="text-sm">{issue}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent News */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Related News & Updates</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {projectDetail.relatedNews.map((news, index) => (
-                  <div key={index} className="flex items-start justify-between p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <h4 className="font-medium mb-1">{news.title}</h4>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <Card className="border-foreground/10 bg-white/90 shadow-sm">
+              <CardHeader>
+                <CardTitle>Related news & updates</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {projectDetail.relatedNews.map((news) => (
+                  <div key={news.title} className="flex items-start justify-between gap-4 rounded-2xl border border-foreground/10 bg-background p-4">
+                    <div>
+                      <h4 className="font-medium text-foreground">{news.title}</h4>
+                      <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                         <span>{news.source}</span>
-                        <span>{new Date(news.date).toLocaleDateString()}</span>
+                        <span>{formatDate(news.date)}</span>
                       </div>
                     </div>
                     <Button variant="ghost" size="sm">
-                      <ExternalLink className="w-4 h-4" />
+                      <ExternalLink className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="timeline" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Project Timeline</CardTitle>
-              <CardDescription>Chronological view of project milestones, delays, and key events</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
+          <TabsContent value="timeline" className="space-y-6">
+            <Card className="border-foreground/10 bg-white/90 shadow-sm">
+              <CardHeader>
+                <CardTitle>Project timeline</CardTitle>
+                <CardDescription>Milestones, delays, and operational status changes</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 {projectDetail.timeline.map((event, index) => (
-                  <div key={index} className="flex items-start">
-                    <div className="flex flex-col items-center mr-4">
+                  <div key={event.event} className="flex items-start gap-4">
+                    <div className="flex flex-col items-center">
                       <div
-                        className={`w-4 h-4 rounded-full ${
+                        className={`h-3 w-3 rounded-full ${
                           event.status === "completed"
-                            ? "bg-green-500"
+                            ? "bg-emerald-500"
                             : event.status === "issue"
-                              ? "bg-red-500"
+                              ? "bg-rose-500"
                               : event.status === "missed"
-                                ? "bg-orange-500"
+                                ? "bg-amber-500"
                                 : event.status === "partial"
                                   ? "bg-yellow-500"
-                                  : "bg-gray-400"
+                                  : "bg-foreground/40"
                         }`}
                       />
-                      {index < projectDetail.timeline.length - 1 && <div className="w-0.5 h-12 bg-gray-300 mt-2" />}
+                      {index < projectDetail.timeline.length - 1 && <div className="mt-2 h-12 w-px bg-foreground/15" />}
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="font-medium">{event.event}</h4>
-                        <span className="text-sm text-muted-foreground">
-                          {new Date(event.date).toLocaleDateString()}
-                        </span>
+                    <div className="flex-1 rounded-2xl border border-foreground/10 bg-background p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <h4 className="font-medium text-foreground">{event.event}</h4>
+                        <span className="text-xs text-muted-foreground">{formatDate(event.date)}</span>
                       </div>
-                      <p className="text-sm text-muted-foreground">{event.description}</p>
+                      <p className="mt-2 text-sm text-muted-foreground">{event.description}</p>
                     </div>
                   </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="financials" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Financial Breakdown</CardTitle>
-              <CardDescription>Detailed breakdown of budget allocation and expenditure</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {projectDetail.financialBreakdown.map((item, index) => (
-                  <div key={index}>
-                    <div className="flex justify-between items-center mb-2">
-                      <h4 className="font-medium">{item.category}</h4>
-                      <div className="text-right">
-                        <div className="font-semibold">
+          <TabsContent value="financials" className="space-y-6">
+            <Card className="border-foreground/10 bg-white/90 shadow-sm">
+              <CardHeader>
+                <CardTitle>Financial breakdown</CardTitle>
+                <CardDescription>Allocation vs expenditure by category</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {projectDetail.financialBreakdown.map((item) => (
+                  <div key={item.category}>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <h4 className="font-medium text-foreground">{item.category}</h4>
+                      <div className="text-right text-sm">
+                        <div className="font-semibold text-foreground">
                           KSh {(item.spent / 1000000000).toFixed(1)}B / {(item.allocated / 1000000000).toFixed(1)}B
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-muted-foreground">
                           {Math.round((item.spent / item.allocated) * 100)}% utilized
                         </div>
                       </div>
                     </div>
-                    <Progress value={(item.spent / item.allocated) * 100} className="h-3" />
+                    <Progress value={(item.spent / item.allocated) * 100} className="mt-3 h-2 bg-foreground/10" />
                   </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="documents" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Project Documents</CardTitle>
-              <CardDescription>Official documents, reports, and contracts related to this project</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {projectDetail.documents.map((doc, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center">
-                      <FileText className="w-8 h-8 text-blue-600 mr-3" />
+          <TabsContent value="documents" className="space-y-6">
+            <Card className="border-foreground/10 bg-white/90 shadow-sm">
+              <CardHeader>
+                <CardTitle>Project documents</CardTitle>
+                <CardDescription>Contracts, audits, and compliance documents</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {projectDetail.documents.map((doc) => (
+                  <div key={doc.name} className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-foreground/10 bg-background p-4">
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-8 w-8 text-foreground" />
                       <div>
-                        <h4 className="font-medium">{doc.name}</h4>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <h4 className="font-medium text-foreground">{doc.name}</h4>
+                        <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                           <span>{doc.size}</span>
-                          <span>{new Date(doc.date).toLocaleDateString()}</span>
-                          <Badge variant="outline" className="text-xs">
+                          <span>{formatDate(doc.date)}</span>
+                          <Badge variant="outline" className="border-foreground/20 text-xs text-foreground">
                             {doc.type}
                           </Badge>
                         </div>
                       </div>
                     </div>
                     <Button variant="outline" size="sm">
-                      <Download className="w-4 h-4 mr-2" />
+                      <FileText className="mr-2 h-4 w-4" />
                       Download
                     </Button>
                   </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="accountability" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Responsible Leaders */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Responsible Leaders</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-start">
-                    <User className="w-8 h-8 text-blue-600 mr-3 mt-1" />
-                    <div className="flex-1">
-                      <h4 className="font-medium">{projectDetail.governor}</h4>
-                      <p className="text-sm text-muted-foreground">County Governor - {projectDetail.county}</p>
-                      <div className="mt-2">
-                        <Link href={`/leaders/governor-${projectDetail.county.toLowerCase()}`}>
-                          <Button variant="outline" size="sm">
-                            View Profile
-                          </Button>
-                        </Link>
-                      </div>
+          <TabsContent value="accountability" className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card className="border-foreground/10 bg-white/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle>Responsible leaders</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <User className="h-8 w-8 text-foreground" />
+                    <div>
+                      <div className="font-medium text-foreground">{projectDetail.governor}</div>
+                      <div className="text-sm text-muted-foreground">County governor - {projectDetail.county}</div>
+                      <Link href={`/leaders/governor-${projectDetail.county.toLowerCase()}`}>
+                        <Button variant="outline" size="sm" className="mt-3">
+                          View profile
+                        </Button>
+                      </Link>
                     </div>
                   </div>
-
                   <Separator />
-
-                  <div className="flex items-start">
-                    <User className="w-8 h-8 text-green-600 mr-3 mt-1" />
-                    <div className="flex-1">
-                      <h4 className="font-medium">{projectDetail.mp}</h4>
-                      <p className="text-sm text-muted-foreground">
+                  <div className="flex items-start gap-3">
+                    <User className="h-8 w-8 text-foreground" />
+                    <div>
+                      <div className="font-medium text-foreground">{projectDetail.mp}</div>
+                      <div className="text-sm text-muted-foreground">
                         Member of Parliament - {projectDetail.constituency}
-                      </p>
-                      <div className="mt-2">
-                        <Link href={`/leaders/mp-${projectDetail.constituency.toLowerCase().replace(" ", "-")}`}>
-                          <Button variant="outline" size="sm">
-                            View Profile
-                          </Button>
-                        </Link>
                       </div>
+                      <Link href={`/leaders/mp-${projectDetail.constituency.toLowerCase().replace(" ", "-")}`}>
+                        <Button variant="outline" size="sm" className="mt-3">
+                          View profile
+                        </Button>
+                      </Link>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            {/* Project Management */}
-            <Card>
+              <Card className="border-foreground/10 bg-white/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle>Project management</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="text-sm font-medium text-foreground">Implementing agency</div>
+                    <div className="text-sm text-muted-foreground">{projectDetail.supervisor}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-foreground">Main contractor</div>
+                    <div className="text-sm text-muted-foreground">{projectDetail.contractor}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-foreground">Financier</div>
+                    <div className="text-sm text-muted-foreground">{projectDetail.financier}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-foreground">Data source</div>
+                    <div className="text-sm text-muted-foreground">{projectDetail.source}</div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="border-foreground/10 bg-foreground text-background shadow-sm">
               <CardHeader>
-                <CardTitle>Project Management</CardTitle>
+                <CardTitle>Take action</CardTitle>
+                <CardDescription className="text-background/80">
+                  Support transparency for this project
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium mb-1">Implementing Agency</h4>
-                    <p className="text-sm text-muted-foreground">{projectDetail.supervisor}</p>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium mb-1">Main Contractor</h4>
-                    <p className="text-sm text-muted-foreground">{projectDetail.contractor}</p>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium mb-1">Financier</h4>
-                    <p className="text-sm text-muted-foreground">{projectDetail.financier}</p>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium mb-1">Data Source</h4>
-                    <p className="text-sm text-muted-foreground">{projectDetail.source}</p>
-                  </div>
-                </div>
+              <CardContent className="grid gap-3 md:grid-cols-3">
+                <Button className="h-16 flex-col bg-background text-foreground hover:bg-white">
+                  <FileText className="mb-2 h-5 w-5" />
+                  Submit evidence
+                </Button>
+                <Button variant="outline" className="h-16 flex-col border-white/30 text-background hover:bg-white/10">
+                  <AlertTriangle className="mb-2 h-5 w-5" />
+                  Report issue
+                </Button>
+                <Button variant="outline" className="h-16 flex-col border-white/30 text-background hover:bg-white/10">
+                  <Users className="mb-2 h-5 w-5" />
+                  Contact leaders
+                </Button>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Citizen Action */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Take Action</CardTitle>
-              <CardDescription>Help us track accountability for this project</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button className="h-20 flex-col">
-                  <FileText className="w-6 h-6 mb-2" />
-                  Submit Evidence
-                </Button>
-                <Button variant="outline" className="h-20 flex-col">
-                  <AlertTriangle className="w-6 h-6 mb-2" />
-                  Report Issue
-                </Button>
-                <Button variant="outline" className="h-20 flex-col">
-                  <Users className="w-6 h-6 mb-2" />
-                  Contact Leaders
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
+      </section>
     </div>
   )
 }

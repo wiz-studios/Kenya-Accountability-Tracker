@@ -21,19 +21,25 @@ export function Navigation() {
   const pathname = usePathname()
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <nav className="sticky top-0 z-50 border-b border-foreground/10 bg-background/80 backdrop-blur">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex items-center justify-between py-3">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">KAT</span>
+          <Link href="/" className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-foreground text-background shadow-sm">
+              <span className="text-xs font-semibold tracking-[0.24em]">KAT</span>
             </div>
-            <span className="font-bold text-xl text-gray-900">Kenya Accountability Tracker</span>
+            <div className="hidden flex-col sm:flex">
+              <span className="font-display text-base font-semibold leading-none text-foreground">
+                Kenya Accountability Tracker
+              </span>
+              <span className="text-xs text-muted-foreground">Transparency for every county</span>
+            </div>
+            <span className="font-display text-base font-semibold text-foreground sm:hidden">KAT</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden items-center gap-2 md:flex">
             {navigation.map((item) => {
               const Icon = item.icon
               return (
@@ -41,10 +47,10 @@ export function Navigation() {
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    "flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-all",
                     pathname === item.href
-                      ? "bg-blue-100 text-blue-700"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100",
+                      ? "bg-foreground text-background shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-foreground/5",
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -56,7 +62,12 @@ export function Navigation() {
 
           {/* Mobile menu button */}
           <div className="md:hidden">
-            <Button variant="ghost" size="sm" onClick={() => setIsOpen(!isOpen)} className="p-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsOpen(!isOpen)}
+              className="rounded-full p-2 hover:bg-foreground/5"
+            >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </Button>
           </div>
@@ -65,7 +76,7 @@ export function Navigation() {
         {/* Mobile Navigation */}
         {isOpen && (
           <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t">
+            <div className="mt-2 space-y-1 rounded-2xl border border-foreground/10 bg-background/95 p-2 shadow-sm">
               {navigation.map((item) => {
                 const Icon = item.icon
                 return (
@@ -73,10 +84,10 @@ export function Navigation() {
                     key={item.name}
                     href={item.href}
                     className={cn(
-                      "flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors",
+                      "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
                       pathname === item.href
-                        ? "bg-blue-100 text-blue-700"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100",
+                        ? "bg-foreground text-background"
+                        : "text-muted-foreground hover:text-foreground hover:bg-foreground/5",
                     )}
                     onClick={() => setIsOpen(false)}
                   >

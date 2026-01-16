@@ -80,7 +80,7 @@ export function InteractiveMap({
   return (
     <div className={`space-y-4 ${className}`}>
       {/* Map Controls */}
-      <Card>
+      <Card className="border-foreground/10 bg-white/90 shadow-sm">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center">
@@ -88,16 +88,16 @@ export function InteractiveMap({
               Interactive Project Map
             </CardTitle>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="rounded-full border-foreground/20">
                 <ZoomIn className="w-4 h-4" />
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="rounded-full border-foreground/20">
                 <ZoomOut className="w-4 h-4" />
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="rounded-full border-foreground/20">
                 <RotateCcw className="w-4 h-4" />
               </Button>
-              <Button variant="outline" size="sm" onClick={clearFilters}>
+              <Button variant="outline" size="sm" onClick={clearFilters} className="rounded-full border-foreground/20">
                 <Filter className="w-4 h-4 mr-1" />
                 Clear
               </Button>
@@ -111,9 +111,11 @@ export function InteractiveMap({
             {/* Remove the CascadingLocationFilter component from the render */}
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Map Layer</label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 block">
+                Map Layer
+              </label>
               <Select value={mapLayer} onValueChange={setMapLayer}>
-                <SelectTrigger>
+                <SelectTrigger className="rounded-full border-foreground/20">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -126,12 +128,14 @@ export function InteractiveMap({
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Status Filter</label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 block">
+                Status Filter
+              </label>
               <Select
                 value={selectedFilters.status}
                 onValueChange={(value) => setSelectedFilters((prev) => ({ ...prev, status: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="rounded-full border-foreground/20">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -144,12 +148,14 @@ export function InteractiveMap({
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Urgency</label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 block">
+                Urgency
+              </label>
               <Select
                 value={selectedFilters.urgency}
                 onValueChange={(value) => setSelectedFilters((prev) => ({ ...prev, urgency: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="rounded-full border-foreground/20">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -164,7 +170,7 @@ export function InteractiveMap({
 
           {/* Budget Range Filter */}
           <div className="mb-4">
-            <label className="text-sm font-medium mb-2 block">
+            <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 block">
               Budget Range: KSh {(selectedFilters.budget[0] / 1000000000).toFixed(1)}B - KSh{" "}
               {(selectedFilters.budget[1] / 1000000000).toFixed(1)}B
             </label>
@@ -180,7 +186,9 @@ export function InteractiveMap({
 
           {/* Zoom Control */}
           <div>
-            <label className="text-sm font-medium mb-2 block">Zoom Level: {zoomLevel[0]}x</label>
+            <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 block">
+              Zoom Level: {zoomLevel[0]}x
+            </label>
             <Slider value={zoomLevel} onValueChange={setZoomLevel} max={15} min={5} step={1} className="w-full" />
           </div>
         </CardContent>
@@ -188,16 +196,18 @@ export function InteractiveMap({
 
       {/* Active Location Filter Display */}
       {(selectedCounty || selectedConstituency) && (
-        <Card>
+        <Card className="border-foreground/10 bg-foreground/5">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">Viewing:</span>
               {selectedConstituency ? (
-                <Badge variant="secondary">
+                <Badge variant="outline" className="border-foreground/20 text-foreground">
                   {selectedConstituency.name}, {selectedCounty?.name}
                 </Badge>
               ) : (
-                <Badge variant="secondary">{selectedCounty?.name} County</Badge>
+                <Badge variant="outline" className="border-foreground/20 text-foreground">
+                  {selectedCounty?.name} County
+                </Badge>
               )}
               <span className="text-sm text-muted-foreground">({filteredProjects.length} projects)</span>
             </div>
@@ -206,11 +216,11 @@ export function InteractiveMap({
       )}
 
       {/* Map Container */}
-      <Card>
+      <Card className="border-foreground/10 bg-white/90 shadow-sm">
         <CardContent className="p-0">
-          <div className="relative h-96 bg-gradient-to-br from-blue-50 to-green-50 rounded-lg overflow-hidden">
+          <div className="relative h-96 overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 to-amber-50">
             {/* Simulated Map Background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-100 via-green-50 to-yellow-50">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/50 via-amber-50 to-rose-50/60">
               {/* Kenya outline simulation */}
               <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 300">
                 <path
@@ -251,9 +261,9 @@ export function InteractiveMap({
                       }`}
                     />
                     {selectedProject === project.id && (
-                      <div className="absolute top-6 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg p-3 min-w-48 z-20">
+                      <div className="absolute top-6 left-1/2 z-20 min-w-48 -translate-x-1/2 rounded-xl border border-foreground/10 bg-background p-3 shadow-lg">
                         <h4 className="font-medium text-sm mb-1">{project.name}</h4>
-                        <div className="space-y-1 text-xs text-gray-600">
+                        <div className="space-y-1 text-xs text-muted-foreground">
                           <div>Status: {project.status}</div>
                           <div>Budget: KSh {(project.budget / 1000000000).toFixed(1)}B</div>
                           <div>Progress: {project.progress}%</div>
@@ -273,9 +283,9 @@ export function InteractiveMap({
             })}
 
             {/* Map Legend */}
-            <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3">
+            <div className="absolute bottom-4 left-4 rounded-xl border border-foreground/10 bg-background/90 p-3 shadow-lg">
               <h4 className="font-medium text-sm mb-2">Legend</h4>
-              <div className="space-y-1 text-xs">
+              <div className="space-y-1 text-xs text-muted-foreground">
                 <div className="flex items-center">
                   <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
                   <span>High Priority</span>
@@ -292,8 +302,8 @@ export function InteractiveMap({
             </div>
 
             {/* Map Stats */}
-            <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-3">
-              <div className="text-xs text-gray-600">
+            <div className="absolute top-4 right-4 rounded-xl border border-foreground/10 bg-background/90 p-3 shadow-lg">
+              <div className="text-xs text-muted-foreground">
                 <div>Showing {filteredProjects.length} projects</div>
                 <div>Zoom: {zoomLevel[0]}x</div>
                 <div>Layer: {mapLayer}</div>
@@ -306,33 +316,33 @@ export function InteractiveMap({
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="border-foreground/10 bg-white/90 shadow-sm">
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-2xl font-semibold text-foreground">
               {filteredProjects.filter((p) => p.urgency === "high").length}
             </div>
             <div className="text-sm text-muted-foreground">High Priority</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-foreground/10 bg-white/90 shadow-sm">
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-600">
+            <div className="text-2xl font-semibold text-foreground">
               {filteredProjects.filter((p) => p.urgency === "medium").length}
             </div>
             <div className="text-sm text-muted-foreground">Medium Priority</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-foreground/10 bg-white/90 shadow-sm">
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-semibold text-foreground">
               {filteredProjects.filter((p) => p.urgency === "low").length}
             </div>
             <div className="text-sm text-muted-foreground">Low Priority</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-foreground/10 bg-white/90 shadow-sm">
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-semibold text-foreground">
               {Math.round(filteredProjects.reduce((sum, p) => sum + p.progress, 0) / filteredProjects.length || 0)}%
             </div>
             <div className="text-sm text-muted-foreground">Avg Progress</div>

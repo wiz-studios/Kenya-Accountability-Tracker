@@ -1,9 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import { AlertTriangle, Search, MapPin, FileText } from "lucide-react"
 import type { County, Constituency } from "@/lib/enhanced-kenya-locations"
+import { SimpleLocationSelector } from "@/components/simple-location-selector"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Progress } from "@/components/ui/progress"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { formatDate, formatYear } from "@/lib/formatters"
 
-// Mock stalled projects data (in real app, this would come from the data pipeline)
 const stalledProjectsData = [
   {
     id: 1,
@@ -128,9 +136,218 @@ const stalledProjectsData = [
   },
 ]
 
+const statusStyles: Record<string, { badge: "default" | "secondary" | "destructive" | "outline"; tone: string }> = {
+  "Confirmed Stalled": { badge: "destructive", tone: "text-rose-600" },
+  "Likely Stalled": { badge: "secondary", tone: "text-amber-600" },
+  "At Risk": { badge: "outline", tone: "text-foreground" },
+}
+
 export default function StalledProjectsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCounty, setSelectedCounty] = useState<County | null>(null)
   const [selectedConstituency, setSelectedConstituency] = useState<Constituency | null>(null)
-  const [selectedSector, setSelectedSector] = useState<string | null>(null)
+  const [selectedSector, setSelectedSector] = useState("All sectors")
+
+  const handleLocationChange = (county: County | null, constituency: Constituency | null) => {
+    setSelectedCounty(county)
+    setSelectedConstituency(constituency)
+  }
+
+  const sectors = useMemo(() => {
+    const sectorSet = new Set(stalledProjectsData.map((project) => project.sector))
+    return ["All sectors", ...Array.from(sectorSet)]
+  }, [])
+
+  const filteredProjects = useMemo(() => {
+    return stalledProjectsData.filter((project) => {
+      const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesLocation =
+        (!selectedCounty || project.county === selectedCounty.name) &&
+        (!selectedConstituency || project.constituency === selectedConstituency.name)
+      const matchesSector = selectedSector === "All sectors" || project.sector === selectedSector
+      return matchesSearch && matchesLocation && matchesSector
+    })
+  }, [searchTerm, selectedCounty, selectedConstituency, selectedSector])
+
+  const stats = useMemo(() => {
+    const total = filteredProjects.length
+    const confirmed = filteredProjects.filter((p) => p.stalledStatus === "Confirmed Stalled").length
+    const likely = filteredProjects.filter((p) => p.stalledStatus === "Likely Stalled").length
+    const averageScore = Math.round(
+      filteredProjects.reduce((sum, p) => sum + p.stalledScore, 0) / total || 0,
+    )
+    return { total, confirmed, likely, averageScore }
+  }, [filteredProjects])
+
+  return (
+    <div className="min-h-screen">
+      <section className="container mx-auto px-4 pt-10">
+        <div className="rounded-3xl border border-foreground/10 bg-white/80 p-8 shadow-sm">
+          <Badge className="bg-foreground text-background">High risk watchlist</Badge>
+          <h1 className="mt-4 font-display text-3xl text-foreground md:text-4xl">Stalled Projects Tracker</h1>
+          <p className="mt-2 max-w-2xl text-muted-foreground">
+            Monitor projects flagged as stalled or at risk, with risk scores, timelines, and recovery recommendations.
+          </p>
+          <div className="mt-6 grid gap-4 md:grid-cols-4">
+            {[
+              { label: "Projects listed", value: stats.total },
+              { label: "Confirmed stalled", value: stats.confirmed },
+              { label: "Likely stalled", value: stats.likely },
+              { label: "Avg risk score", value: `${stats.averageScore}%` },
+            ].map((stat) => (
+              <Card key={stat.label} className="border-foreground/10 bg-white/90 shadow-sm">
+                <CardContent className="p-4">
+                  <div className="text-xl font-semibold text-foreground">{stat.value}</div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground">{stat.label}</div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="container mx-auto px-4 py-8">
+        <Card className="border-foreground/10 bg-white/90 shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Search className="h-5 w-5" />
+              Filter stalled projects
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Search project
+                </label>
+                <Input
+                  placeholder="Search by project name"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Location
+                </label>
+                <SimpleLocationSelector onLocationChange={handleLocationChange} placeholder="Select location" />
+              </div>
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Sector
+                </label>
+                <Select value={selectedSector} onValueChange={setSelectedSector}>
+                  <SelectTrigger className="rounded-full border-foreground/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sectors.map((sector) => (
+                      <SelectItem key={sector} value={sector}>
+                        {sector}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="container mx-auto px-4 pb-12">
+        <div className="grid gap-6 md:grid-cols-2">
+          {filteredProjects.map((project) => {
+            const style = statusStyles[project.stalledStatus] || statusStyles["At Risk"]
+            return (
+              <Card key={project.id} className="border-foreground/10 bg-white/90 shadow-sm">
+                <CardHeader>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="border-foreground/20 text-foreground">
+                          {project.sector}
+                        </Badge>
+                        <Badge variant={style.badge}>{project.stalledStatus}</Badge>
+                      </div>
+                      <CardTitle className="mt-3 text-lg text-foreground">{project.name}</CardTitle>
+                      <CardDescription className="mt-1 flex items-center gap-2">
+                        <MapPin className="h-3 w-3" />
+                        {project.constituency}, {project.county}
+                      </CardDescription>
+                    </div>
+                    <div className="text-right text-sm">
+                      <div className="font-semibold text-foreground">KSh {(project.budget / 1000000000).toFixed(1)}B</div>
+                      <div className="text-muted-foreground">Budget</div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm">
+                      <span>Stalled score</span>
+                      <span className={`font-semibold ${style.tone}`}>{project.stalledScore}%</span>
+                    </div>
+                    <Progress value={project.stalledScore} className="mt-2 h-2 bg-foreground/10" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <div className="text-muted-foreground">Started</div>
+                      <div className="font-semibold text-foreground">{formatYear(project.startDate)}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Expected completion</div>
+                      <div className="font-semibold text-foreground">{formatYear(project.expectedCompletion)}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Months stalled</div>
+                      <div className="font-semibold text-foreground">{project.monthsStalled}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Confidence</div>
+                      <div className="font-semibold text-foreground">{project.confidenceLevel}%</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground mb-2">Key issues</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {project.issues.slice(0, 3).map((issue) => (
+                        <Badge key={issue} variant="outline" className="border-foreground/20 text-xs text-foreground">
+                          {issue}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-foreground/10 bg-background p-4">
+                    <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                      <AlertTriangle className="h-4 w-4" />
+                      Recovery recommendations
+                    </div>
+                    <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                      {project.recommendations.map((rec) => (
+                        <li key={rec} className="flex items-start gap-2">
+                          <div className="mt-1 h-1 w-1 rounded-full bg-foreground/60" />
+                          <span>{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-foreground/10 pt-2 text-xs text-muted-foreground">
+                    <span>Last update: {formatDate(project.lastUpdate)}</span>
+                    <Button variant="outline" size="sm">
+                      <FileText className="mr-1 h-3 w-3" />
+                      View details
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+      </section>
+    </div>
+  )
 }
