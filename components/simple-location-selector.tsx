@@ -36,7 +36,8 @@ export function SimpleLocationSelector({
     setSelectedCounty(county)
     setSelectedConstituency(null)
     setSearchValue("")
-    setMode("constituency")
+    setMode("county") // stay on counties; user can reopen to drill down
+    setOpen(false)
     onLocationChange?.(county, null)
   }
 
@@ -101,7 +102,7 @@ export function SimpleLocationSelector({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[350px] rounded-2xl border-foreground/10 bg-background p-0 shadow-lg">
-          <Command shouldFilter={false}>
+          <Command>
             <CommandInput
               placeholder={mode === "county" ? "Search counties..." : "Search constituencies..."}
               value={searchValue}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Search, Filter, MapPin, Users, AlertTriangle, Shield, Phone, ExternalLink } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -11,10 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SimpleLocationSelector } from "@/components/simple-location-selector"
 import type { County, Constituency } from "@/lib/enhanced-kenya-locations"
 import { formatNumber } from "@/lib/formatters"
+import type { Leader } from "@/lib/types"
 
-const leadersData = [
+const fallbackLeaders: Leader[] = [
   {
-    id: 1,
+    id: "1",
     name: "Johnson Sakaja",
     position: "County Governor",
     county: "Nairobi",
@@ -40,7 +41,7 @@ const leadersData = [
     },
   },
   {
-    id: 2,
+    id: "2",
     name: "Hon. Babu Owino",
     position: "Member of Parliament",
     county: "Nairobi",
@@ -66,7 +67,7 @@ const leadersData = [
     },
   },
   {
-    id: 3,
+    id: "3",
     name: "Prof. Anyang' Nyong'o",
     position: "County Governor",
     county: "Kisumu",
@@ -92,7 +93,7 @@ const leadersData = [
     },
   },
   {
-    id: 4,
+    id: "4",
     name: "Hon. Joshua Oron",
     position: "Member of Parliament",
     county: "Kisumu",
@@ -114,7 +115,7 @@ const leadersData = [
     },
   },
   {
-    id: 5,
+    id: "5",
     name: "Susan Kihika",
     position: "County Governor",
     county: "Nakuru",
@@ -140,7 +141,7 @@ const leadersData = [
     },
   },
   {
-    id: 6,
+    id: "6",
     name: "Jonathan Bii",
     position: "County Governor",
     county: "Uasin Gishu",
@@ -167,29 +168,79 @@ const positions = ["All Positions", "County Governor", "Member of Parliament", "
 const parties = ["All Parties", "UDA", "ODM", "Jubilee", "ANC", "DAP-K", "Other"]
 
 export default function LeadersPage() {
+  const [leaders, setLeaders] = useState<Leader[]>(fallbackLeaders)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCounty, setSelectedCounty] = useState<County | null>(null)
   const [selectedConstituency, setSelectedConstituency] = useState<Constituency | null>(null)
   const [selectedPosition, setSelectedPosition] = useState("All Positions")
   const [selectedParty, setSelectedParty] = useState("All Parties")
   const [sortBy, setSortBy] = useState("score")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch("/api/leaders?limit=120")
+        if (!res.ok) {
+          throw new Error(`Failed to fetch leaders (${res.status})`)
+        }
+        const body = await res.json()
+        if (body.data && Array.isArray(body.data)) {
+          setLeaders(body.data)
+        } else {
+          setError("Leaders API returned no data, showing fallback content.")
+          setLeaders(fallbackLeaders)
+        }
+      } catch (err) {
+        setError((err as Error).message)
+        setLeaders(fallbackLeaders)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [])
 
   const handleLocationChange = (county: County | null, constituency: Constituency | null) => {
     setSelectedCounty(county)
     setSelectedConstituency(constituency)
   }
 
-  const filteredLeaders = leadersData.filter((leader) => {
-    const matchesSearch =
-      leader.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      leader.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      leader.county.toLowerCase().includes(searchTerm.toLowerCase())
+  const normalize = (value: string | null | undefined) =>
+    (value || "")
+      .toLowerCase()
+      .replace(/county$/i, "")
+      .replace(/\s+/g, " ")
+      .trim()
 
-    const matchesLocation =
-      (!selectedCounty || leader.county === selectedCounty.name) &&
-      (!selectedConstituency ||
-        leader.constituency === selectedConstituency.name ||
-        leader.constituency === "County-wide")
+  const filteredLeaders = leaders.filter((leader) => {
+    const leaderCounty = normalize(leader.county)
+    const leaderConstituency = normalize(leader.constituency)
+    const search = searchTerm.toLowerCase()
+    const selectedCountyName = normalize(selectedCounty?.name)
+    const selectedConstituencyName = normalize(selectedConstituency?.name)
+
+    const matchesSearch =
+      leader.name.toLowerCase().includes(search) ||
+      leader.position.toLowerCase().includes(search) ||
+      leader.county.toLowerCase().includes(search)
+
+    const matchesCounty =
+      !selectedCounty ||
+      leaderCounty === selectedCountyName ||
+      leaderCounty.includes(selectedCountyName) ||
+      selectedCountyName.includes(leaderCounty)
+
+    const matchesConstituency =
+      !selectedConstituency ||
+      leaderConstituency === selectedConstituencyName ||
+      leaderConstituency.includes(selectedConstituencyName) ||
+      leaderConstituency === normalize("County-wide")
+
+    const matchesLocation = matchesCounty && matchesConstituency
 
     const matchesPosition = selectedPosition === "All Positions" || leader.position === selectedPosition
     const matchesParty = selectedParty === "All Parties" || leader.party === selectedParty
@@ -228,6 +279,11 @@ export default function LeadersPage() {
           <p className="mt-2 max-w-2xl text-muted-foreground">
             Track the performance and accountability of governors, MPs, and other leaders across all counties.
           </p>
+          {error && (
+            <div className="mt-3 rounded-2xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              {error}
+            </div>
+          )}
           <div className="mt-6 grid gap-4 md:grid-cols-4">
             {[
               { label: "Leaders tracked", value: totalLeaders, icon: Users },
@@ -341,6 +397,11 @@ export default function LeadersPage() {
       </section>
 
       <section className="container mx-auto px-4 pb-12">
+        {loading && (
+          <Card className="mb-4 border-foreground/10 bg-white/90 shadow-sm">
+            <CardContent className="p-4 text-sm text-muted-foreground">Loading leaders from Supabase...</CardContent>
+          </Card>
+        )}
         {sortedLeaders.length === 0 ? (
           <Card className="border-foreground/10 bg-white/90 shadow-sm">
             <CardContent className="flex flex-col items-center justify-center py-12">
