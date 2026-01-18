@@ -1,10 +1,11 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { MapPin, X } from "lucide-react"
+import { MapPin, Search, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { enhancedKenyaLocations, getConstituenciesByCounty, type County, type Constituency } from "@/lib/enhanced-kenya-locations"
 
@@ -24,11 +25,23 @@ export function SimpleLocationSelector({
 }: SimpleLocationSelectorProps) {
   const [selectedCountyId, setSelectedCountyId] = useState<string>(ALL_COUNTIES_VALUE)
   const [selectedConstituencyId, setSelectedConstituencyId] = useState<string>(ALL_CONSTITUENCIES_VALUE)
+  const [countySearch, setCountySearch] = useState("")
+
+  const sortedCounties = useMemo(
+    () => [...enhancedKenyaLocations].sort((a, b) => a.name.localeCompare(b.name)),
+    []
+  )
+
+  const filteredCounties = useMemo(() => {
+    const term = countySearch.toLowerCase().trim()
+    if (!term) return sortedCounties
+    return sortedCounties.filter((c) => c.name.toLowerCase().includes(term))
+  }, [countySearch, sortedCounties])
 
   const selectedCounty = useMemo(() => {
     if (selectedCountyId === ALL_COUNTIES_VALUE) return null
-    return enhancedKenyaLocations.find((county) => county.id === selectedCountyId) ?? null
-  }, [selectedCountyId])
+    return sortedCounties.find((county) => county.id === selectedCountyId) ?? null
+  }, [selectedCountyId, sortedCounties])
 
   const constituencies = useMemo(() => {
     if (!selectedCounty) return []
@@ -44,13 +57,14 @@ export function SimpleLocationSelector({
   const handleCountyChange = (value: string) => {
     setSelectedCountyId(value)
     setSelectedConstituencyId(ALL_CONSTITUENCIES_VALUE)
+    setCountySearch("")
 
     if (value === ALL_COUNTIES_VALUE) {
       onLocationChange?.(null, null)
       return
     }
 
-    const nextCounty = enhancedKenyaLocations.find((county) => county.id === value) ?? null
+    const nextCounty = sortedCounties.find((county) => county.id === value) ?? null
     onLocationChange?.(nextCounty, null)
   }
 
@@ -71,6 +85,7 @@ export function SimpleLocationSelector({
   const handleClear = () => {
     setSelectedCountyId(ALL_COUNTIES_VALUE)
     setSelectedConstituencyId(ALL_CONSTITUENCIES_VALUE)
+    setCountySearch("")
     onLocationChange?.(null, null)
   }
 
@@ -83,15 +98,30 @@ export function SimpleLocationSelector({
             <SelectValue placeholder={placeholder} />
           </div>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="w-[260px]">
+          <div className="p-2">
+            <div className="flex items-center gap-2 rounded-md border px-2 py-1.5">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                value={countySearch}
+                onChange={(e) => setCountySearch(e.target.value)}
+                placeholder="Search counties..."
+                className="h-7 border-0 shadow-none focus-visible:ring-0 p-0 text-sm"
+              />
+            </div>
+          </div>
           <SelectItem value={ALL_COUNTIES_VALUE} className="cursor-pointer">
             All counties
           </SelectItem>
-          {enhancedKenyaLocations.map((county) => (
-            <SelectItem key={county.id} value={county.id} className="cursor-pointer">
-              {county.name}
-            </SelectItem>
-          ))}
+          {filteredCounties.length === 0 ? (
+            <div className="px-3 py-2 text-sm text-muted-foreground">No counties found</div>
+          ) : (
+            filteredCounties.map((county) => (
+              <SelectItem key={county.id} value={county.id} className="cursor-pointer">
+                {county.name}
+              </SelectItem>
+            ))
+          )}
         </SelectContent>
       </Select>
 
