@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SimpleLocationSelector } from "@/components/simple-location-selector"
 import type { County, Constituency } from "@/lib/enhanced-kenya-locations"
 import { formatNumber } from "@/lib/formatters"
-import type { Leader } from "@/lib/types"
+import type { Leader, Senator } from "@/lib/types"
+import { senatorsData } from "@/lib/senators-data"
 
 const fallbackLeaders: Leader[] = [
   {
@@ -155,8 +156,30 @@ const fallbackLeaders: Leader[] = [
 const positions = ["All Positions", "County Governor", "Member of Parliament", "Senator", "County Executive"]
 const parties = ["All Parties", "UDA", "ODM", "Jubilee", "ANC", "DAP-K", "Other"]
 
+// Convert senators data to Leader format
+const senatorsAsLeaders: Leader[] = senatorsData.map((senator) => ({
+  id: senator.id,
+  name: senator.name,
+  position: "Senator",
+  county: senator.county,
+  constituency: "County-wide",
+  party: senator.party,
+  term: senator.term,
+  allegations: 0,
+  projectsOverseen: 0,
+  budgetManaged: 0,
+  accountabilityScore: 0,
+  phone: senator.phone || "",
+  email: senator.email || "",
+  photoUrl: senator.image || "/placeholder.svg?height=150&width=150",
+  recentActions: [],
+  keyProjects: [],
+  socialTwitter: "",
+  socialFacebook: "",
+}))
+
 export default function LeadersPage() {
-  const [leaders, setLeaders] = useState<Leader[]>(fallbackLeaders)
+  const [leaders, setLeaders] = useState<Leader[]>([...fallbackLeaders, ...senatorsAsLeaders])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCounty, setSelectedCounty] = useState<County | null>(null)
   const [selectedConstituency, setSelectedConstituency] = useState<Constituency | null>(null)
