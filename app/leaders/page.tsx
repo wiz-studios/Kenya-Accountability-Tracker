@@ -246,36 +246,41 @@ export default function LeadersPage() {
       .trim()
 
   const filteredLeaders = leaders.filter((leader) => {
-    const leaderCounty = normalize(leader.county)
-    const leaderConstituency = normalize(leader.constituency)
-    const search = searchTerm.toLowerCase()
-    const selectedCountyName = selectedCounty ? normalize(selectedCounty.name) : null
-    const selectedConstituencyName = selectedConstituency ? normalize(selectedConstituency.name) : null
+    // Position filter - this should be the primary filter
+    if (selectedPosition !== "All Positions" && leader.position !== selectedPosition) {
+      return false
+    }
 
-    const matchesSearch =
-      !searchTerm ||
-      leader.name.toLowerCase().includes(search) ||
-      leader.position.toLowerCase().includes(search) ||
-      leader.county.toLowerCase().includes(search)
+    // Party filter
+    if (selectedParty !== "All Parties" && leader.party !== selectedParty) {
+      return false
+    }
 
-    const matchesCounty =
-      !selectedCounty ||
-      leaderCounty === selectedCountyName ||
-      leaderCounty.includes(selectedCountyName || "") ||
-      (selectedCountyName && selectedCountyName.includes(leaderCounty))
+    // Search filter
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase()
+      const matchesSearch =
+        leader.name.toLowerCase().includes(search) ||
+        leader.position.toLowerCase().includes(search) ||
+        leader.county.toLowerCase().includes(search)
+      if (!matchesSearch) return false
+    }
 
-    const matchesConstituency =
-      !selectedConstituency ||
-      leaderConstituency === selectedConstituencyName ||
-      leaderConstituency.includes(selectedConstituencyName || "") ||
-      leaderConstituency === normalize("County-wide")
+    // Location filter - county
+    if (selectedCounty) {
+      const leaderCounty = leader.county.toLowerCase().replace(/county$/i, "").trim()
+      const selectedCountyName = selectedCounty.name.toLowerCase().replace(/county$/i, "").trim()
+      if (leaderCounty !== selectedCountyName) return false
+    }
 
-    const matchesLocation = matchesCounty && matchesConstituency
+    // Location filter - constituency
+    if (selectedConstituency) {
+      const isCountyWide = leader.constituency.toLowerCase() === "county-wide"
+      const matchesConstituency = leader.constituency === selectedConstituency.name
+      if (!isCountyWide && !matchesConstituency) return false
+    }
 
-    const matchesPosition = selectedPosition === "All Positions" || leader.position === selectedPosition
-    const matchesParty = selectedParty === "All Parties" || leader.party === selectedParty
-
-    return matchesSearch && matchesLocation && matchesPosition && matchesParty
+    return true
   })
 
   const sortedLeaders = [...filteredLeaders].sort((a, b) => {
