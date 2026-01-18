@@ -19,6 +19,18 @@ export type Leader = {
   socialFacebook?: string | null
 }
 
+export type Senator = {
+  id: string
+  name: string
+  county: string
+  party: string
+  role: string
+  term: string
+  phone?: string
+  email?: string
+  image?: string
+}
+
 export type Project = {
   id: string
   name: string
