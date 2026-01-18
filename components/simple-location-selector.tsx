@@ -36,8 +36,7 @@ export function SimpleLocationSelector({
     setSelectedCounty(county)
     setSelectedConstituency(null)
     setSearchValue("")
-    setMode("county") // stay on counties; user can reopen to drill down
-    setOpen(false)
+    setMode("constituency")
     onLocationChange?.(county, null)
   }
 
@@ -113,7 +112,7 @@ export function SimpleLocationSelector({
 
               {selectedCounty && mode === "constituency" && (
                 <CommandGroup>
-                  <CommandItem onSelect={resetToCountyMode} className="text-muted-foreground">
+                  <CommandItem onSelect={resetToCountyMode} onClick={resetToCountyMode} className="text-muted-foreground cursor-pointer">
                     Back to counties
                   </CommandItem>
                 </CommandGroup>
@@ -122,7 +121,7 @@ export function SimpleLocationSelector({
               {mode === "county" && (
                 <CommandGroup heading="Counties">
                   {filteredCounties.map((county) => (
-                    <CommandItem key={county.id} value={county.name} onSelect={() => handleCountySelect(county)}>
+                    <CommandItem key={county.id} value={county.name} className="cursor-pointer" onSelect={() => handleCountySelect(county)} onClick={() => handleCountySelect(county)}>
                       <Check
                         className={cn("mr-2 h-4 w-4", selectedCounty?.id === county.id ? "opacity-100" : "opacity-0")}
                       />
@@ -143,7 +142,9 @@ export function SimpleLocationSelector({
                     <CommandItem
                       key={constituency.id}
                       value={constituency.name}
+                      className="cursor-pointer"
                       onSelect={() => handleConstituencySelect(constituency)}
+                      onClick={() => handleConstituencySelect(constituency)}
                     >
                       <Check
                         className={cn(
