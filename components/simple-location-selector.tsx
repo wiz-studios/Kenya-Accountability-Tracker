@@ -1,15 +1,15 @@
 "use client"
 
-import { useState } from "react"
-import { Check, ChevronsUpDown, MapPin } from "lucide-react"
+import { useState, useMemo } from "react"
+import { MapPin, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   enhancedKenyaLocations,
-  getCountyById,
   getConstituenciesByCounty,
   type County,
   type Constituency,
@@ -29,48 +29,55 @@ export function SimpleLocationSelector({
   const [open, setOpen] = useState(false)
   const [selectedCounty, setSelectedCounty] = useState<County | null>(null)
   const [selectedConstituency, setSelectedConstituency] = useState<Constituency | null>(null)
-  const [searchValue, setSearchValue] = useState("")
+  const [searchInput, setSearchInput] = useState("")
   const [mode, setMode] = useState<"county" | "constituency">("county")
 
-  const handleCountySelect = (county: County) => {
+  const filteredCounties = useMemo(() => {
+    return enhancedKenyaLocations.filter((c) =>
+      c.name.toLowerCase().includes(searchInput.toLowerCase())
+    )
+  }, [searchInput])
+
+  const filteredConstituencies = useMemo(() => {
+    if (!selectedCounty) return []
+    return getConstituenciesByCounty(selectedCounty.id).filter((con) =>
+      con.name.toLowerCase().includes(searchInput.toLowerCase())
+    )
+  }, [selectedCounty, searchInput])
+
+  const handleSelectCounty = (county: County) => {
     setSelectedCounty(county)
     setSelectedConstituency(null)
-    setSearchValue("")
+    setSearchInput("")
     setMode("constituency")
     onLocationChange?.(county, null)
   }
 
-  const handleConstituencySelect = (constituency: Constituency) => {
-    const county = getCountyById(constituency.countyId)
-    setSelectedCounty(county || null)
+  const handleSelectConstituency = (constituency: Constituency) => {
     setSelectedConstituency(constituency)
     setOpen(false)
-    setSearchValue("")
-    onLocationChange?.(county || null, constituency)
+    setSearchInput("")
+    onLocationChange?.(selectedCounty, constituency)
   }
 
-  const clearSelection = () => {
+  const handleClear = () => {
     setSelectedCounty(null)
     setSelectedConstituency(null)
-    setSearchValue("")
+    setSearchInput("")
     setMode("county")
     onLocationChange?.(null, null)
   }
 
-  const resetToCountyMode = () => {
+  const handleBackToCounties = () => {
     setMode("county")
-    setSearchValue("")
+    setSearchInput("")
   }
 
-  const filteredCounties = enhancedKenyaLocations.filter((county) =>
-    county.name.toLowerCase().includes(searchValue.toLowerCase()),
-  )
-
-  const availableConstituencies = selectedCounty
-    ? getConstituenciesByCounty(selectedCounty.id).filter((constituency) =>
-        constituency.name.toLowerCase().includes(searchValue.toLowerCase()),
-      )
-    : []
+  const displayText = selectedConstituency
+    ? `${selectedConstituency.name}, ${selectedCounty?.name}`
+    : selectedCounty
+      ? `${selectedCounty.name} County`
+      : placeholder
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
@@ -78,93 +85,114 @@ export function SimpleLocationSelector({
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            role="combobox"
-            aria-expanded={open}
             className="justify-between rounded-full border-foreground/20 bg-background"
           >
-            <div className="flex min-w-0 flex-1 items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
               <MapPin className="h-4 w-4 flex-shrink-0" />
-              {selectedConstituency ? (
-                <div className="flex min-w-0 flex-1 items-center gap-2">
-                  <span className="truncate">{selectedConstituency.name}</span>
-                  <Badge variant="outline" className="border-foreground/20 text-xs text-foreground">
-                    {selectedCounty?.name}
-                  </Badge>
-                </div>
-              ) : selectedCounty ? (
-                <span className="truncate">{selectedCounty.name} County</span>
-              ) : (
-                <span className="truncate text-muted-foreground">{placeholder}</span>
-              )}
+              <span className="truncate text-sm">{displayText}</span>
             </div>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[350px] rounded-2xl border-foreground/10 bg-background p-0 shadow-lg">
-          <Command>
-            <CommandInput
+
+        <PopoverContent className="w-80 p-0" align="start">
+          <div className="space-y-2 p-4">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium">
+                {mode === "county" ? "Select County" : `Select Constituency${selectedCounty ? ` (${selectedCounty.name})` : ""}`}
+              </h3>
+              {mode === "constituency" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBackToCounties}
+                  className="h-6 px-2 text-xs"
+                >
+                  Back
+                </Button>
+              )}
+            </div>
+
+            {/* Search Input */}
+            <Input
               placeholder={mode === "county" ? "Search counties..." : "Search constituencies..."}
-              value={searchValue}
-              onValueChange={setSearchValue}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="h-8"
             />
-            <CommandList>
-              <CommandEmpty>No {mode === "county" ? "counties" : "constituencies"} found.</CommandEmpty>
 
-              {selectedCounty && mode === "constituency" && (
-                <CommandGroup>
-                  <CommandItem onSelect={resetToCountyMode} onClick={resetToCountyMode} className="text-muted-foreground cursor-pointer">
-                    Back to counties
-                  </CommandItem>
-                </CommandGroup>
-              )}
-
-              {mode === "county" && (
-                <CommandGroup heading="Counties">
-                  {filteredCounties.map((county) => (
-                    <CommandItem key={county.id} value={county.name} className="cursor-pointer" onSelect={() => handleCountySelect(county)} onClick={() => handleCountySelect(county)}>
-                      <Check
-                        className={cn("mr-2 h-4 w-4", selectedCounty?.id === county.id ? "opacity-100" : "opacity-0")}
-                      />
-                      <div className="flex w-full items-center justify-between">
-                        <span>{county.name}</span>
-                        <Badge variant="outline" className="border-foreground/20 text-xs text-foreground">
-                          {county.constituencies.length} constituencies
-                        </Badge>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
-
-              {mode === "constituency" && selectedCounty && (
-                <CommandGroup heading={`Constituencies in ${selectedCounty.name}`}>
-                  {availableConstituencies.map((constituency) => (
-                    <CommandItem
-                      key={constituency.id}
-                      value={constituency.name}
-                      className="cursor-pointer"
-                      onSelect={() => handleConstituencySelect(constituency)}
-                      onClick={() => handleConstituencySelect(constituency)}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          selectedConstituency?.id === constituency.id ? "opacity-100" : "opacity-0",
+            {/* Counties List */}
+            {mode === "county" && (
+              <ScrollArea className="h-[300px] border rounded-lg">
+                <div className="p-2 space-y-1">
+                  {filteredCounties.length === 0 ? (
+                    <div className="text-sm text-muted-foreground p-3 text-center">
+                      No counties found
+                    </div>
+                  ) : (
+                    filteredCounties.map((county) => (
+                      <button
+                        key={county.id}
+                        onClick={() => handleSelectCounty(county)}
+                        className="w-full text-left px-3 py-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors flex items-center justify-between group"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium">{county.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {county.constituencies.length} constituencies
+                          </div>
+                        </div>
+                        {selectedCounty?.id === county.id && (
+                          <Badge variant="secondary" className="ml-2 flex-shrink-0">
+                            ✓
+                          </Badge>
                         )}
-                      />
-                      <span>{constituency.name}</span>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
-            </CommandList>
-          </Command>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            )}
+
+            {/* Constituencies List */}
+            {mode === "constituency" && selectedCounty && (
+              <ScrollArea className="h-[300px] border rounded-lg">
+                <div className="p-2 space-y-1">
+                  {filteredConstituencies.length === 0 ? (
+                    <div className="text-sm text-muted-foreground p-3 text-center">
+                      No constituencies found
+                    </div>
+                  ) : (
+                    filteredConstituencies.map((constituency) => (
+                      <button
+                        key={constituency.id}
+                        onClick={() => handleSelectConstituency(constituency)}
+                        className="w-full text-left px-3 py-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors flex items-center justify-between"
+                      >
+                        <div className="text-sm font-medium">{constituency.name}</div>
+                        {selectedConstituency?.id === constituency.id && (
+                          <Badge variant="secondary">✓</Badge>
+                        )}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            )}
+          </div>
         </PopoverContent>
       </Popover>
 
+      {/* Clear button */}
       {(selectedCounty || selectedConstituency) && (
-        <Button variant="ghost" size="sm" onClick={clearSelection} className="h-6 self-start px-2 text-xs">
-          Clear selection
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleClear}
+          className="h-6 self-start px-2 text-xs gap-1"
+        >
+          <X className="h-3 w-3" />
+          Clear
         </Button>
       )}
     </div>
