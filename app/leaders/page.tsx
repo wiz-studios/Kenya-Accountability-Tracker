@@ -249,10 +249,11 @@ export default function LeadersPage() {
     const leaderCounty = normalize(leader.county)
     const leaderConstituency = normalize(leader.constituency)
     const search = searchTerm.toLowerCase()
-    const selectedCountyName = normalize(selectedCounty?.name)
-    const selectedConstituencyName = normalize(selectedConstituency?.name)
+    const selectedCountyName = selectedCounty ? normalize(selectedCounty.name) : null
+    const selectedConstituencyName = selectedConstituency ? normalize(selectedConstituency.name) : null
 
     const matchesSearch =
+      !searchTerm ||
       leader.name.toLowerCase().includes(search) ||
       leader.position.toLowerCase().includes(search) ||
       leader.county.toLowerCase().includes(search)
@@ -260,13 +261,13 @@ export default function LeadersPage() {
     const matchesCounty =
       !selectedCounty ||
       leaderCounty === selectedCountyName ||
-      leaderCounty.includes(selectedCountyName) ||
-      selectedCountyName.includes(leaderCounty)
+      leaderCounty.includes(selectedCountyName || "") ||
+      (selectedCountyName && selectedCountyName.includes(leaderCounty))
 
     const matchesConstituency =
       !selectedConstituency ||
       leaderConstituency === selectedConstituencyName ||
-      leaderConstituency.includes(selectedConstituencyName) ||
+      leaderConstituency.includes(selectedConstituencyName || "") ||
       leaderConstituency === normalize("County-wide")
 
     const matchesLocation = matchesCounty && matchesConstituency
