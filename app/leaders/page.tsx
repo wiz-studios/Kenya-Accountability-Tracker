@@ -171,13 +171,29 @@ export default function LeadersPage() {
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch("/api/leaders?limit=120")
+        // pull a generous slice to avoid missing records (MPs + Governors)
+        const res = await fetch("/api/leaders?limit=1000")
         if (!res.ok) {
           throw new Error(`Failed to fetch leaders (${res.status})`)
         }
         const body = await res.json()
         if (body.data && Array.isArray(body.data)) {
-          setLeaders(body.data)
+          // de-duplicate by normalized name + position + county
+          const seen = new Set<string>()
+          const deduped: Leader[] = []
+          const normalizeKey = (value: string | null | undefined) =>
+            (value || "").toLowerCase().replace(/\s+/g, " ").trim()
+          for (const leader of body.data as Leader[]) {
+            const key = [
+              normalizeKey(leader.name),
+              normalizeKey(leader.position),
+              normalizeKey(leader.county),
+            ].join("|")
+            if (seen.has(key)) continue
+            seen.add(key)
+            deduped.push(leader)
+          }
+          setLeaders(deduped.length ? deduped : fallbackLeaders)
         } else {
           setError("Leaders API returned no data, showing fallback content.")
           setLeaders(fallbackLeaders)
