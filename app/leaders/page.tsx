@@ -216,14 +216,16 @@ export default function LeadersPage() {
             seen.add(key)
             deduped.push(leader)
           }
-          setLeaders(deduped.length ? deduped : fallbackLeaders)
+          // Add senators to the leaders list
+          const combinedLeaders = deduped.length ? deduped : fallbackLeaders
+          setLeaders([...combinedLeaders, ...senatorsAsLeaders])
         } else {
           setError("Leaders API returned no data, showing fallback content.")
-          setLeaders(fallbackLeaders)
+          setLeaders([...fallbackLeaders, ...senatorsAsLeaders])
         }
       } catch (err) {
         setError((err as Error).message)
-        setLeaders(fallbackLeaders)
+        setLeaders([...fallbackLeaders, ...senatorsAsLeaders])
       } finally {
         setLoading(false)
       }
