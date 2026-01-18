@@ -28,17 +28,15 @@ const fallbackLeaders: Leader[] = [
     accountabilityScore: 68,
     phone: "+254 700 000 001",
     email: "governor@nairobi.go.ke",
-    image: "/placeholder.svg?height=150&width=150",
+    photoUrl: "/placeholder.svg?height=150&width=150",
     recentActions: [
       "Launched Nairobi Digital City project",
       "Addressed BRT system delays",
       "Signed MOU for affordable housing",
     ],
     keyProjects: ["Nairobi BRT System", "Digital City Initiative", "Green City Program"],
-    socialMedia: {
-      twitter: "@SakajaJohnson",
-      facebook: "Johnson Sakaja Official",
-    },
+    socialTwitter: "@SakajaJohnson",
+    socialFacebook: "Johnson Sakaja Official",
   },
   {
     id: "2",
@@ -54,17 +52,15 @@ const fallbackLeaders: Leader[] = [
     accountabilityScore: 72,
     phone: "+254 700 000 002",
     email: "mp@embakasi-east.go.ke",
-    image: "/placeholder.svg?height=150&width=150",
+    photoUrl: "/placeholder.svg?height=150&width=150",
     recentActions: [
       "Questioned stalled road projects",
       "Advocated for youth employment",
       "Launched education bursary program",
     ],
     keyProjects: ["Embakasi East Roads", "Youth Empowerment Center", "Education Bursary Fund"],
-    socialMedia: {
-      twitter: "@HonBabuOwino",
-      facebook: "Babu Owino Official",
-    },
+    socialTwitter: "@HonBabuOwino",
+    socialFacebook: "Babu Owino Official",
   },
   {
     id: "3",
@@ -80,17 +76,15 @@ const fallbackLeaders: Leader[] = [
     accountabilityScore: 85,
     phone: "+254 700 000 003",
     email: "governor@kisumu.go.ke",
-    image: "/placeholder.svg?height=150&width=150",
+    photoUrl: "/placeholder.svg?height=150&width=150",
     recentActions: [
       "Completed water treatment plant",
       "Launched smart city initiative",
       "Improved healthcare facilities",
     ],
     keyProjects: ["Kisumu Smart City", "Water Treatment Expansion", "Port Development"],
-    socialMedia: {
-      twitter: "@ProfNyongo",
-      facebook: "Anyang Nyongo Official",
-    },
+    socialTwitter: "@ProfNyongo",
+    socialFacebook: "Anyang Nyongo Official",
   },
   {
     id: "4",
@@ -106,13 +100,11 @@ const fallbackLeaders: Leader[] = [
     accountabilityScore: 78,
     phone: "+254 700 000 004",
     email: "mp@kisumu-central.go.ke",
-    image: "/placeholder.svg?height=150&width=150",
+    photoUrl: "/placeholder.svg?height=150&width=150",
     recentActions: ["Supported port modernization", "Advocated for fishing industry", "Promoted tourism development"],
     keyProjects: ["Kisumu Port Upgrade", "Fishing Industry Support", "Tourism Promotion"],
-    socialMedia: {
-      twitter: "@JoshuaOron",
-      facebook: "Joshua Oron MP",
-    },
+    socialTwitter: "@JoshuaOron",
+    socialFacebook: "Joshua Oron MP",
   },
   {
     id: "5",
@@ -128,17 +120,15 @@ const fallbackLeaders: Leader[] = [
     accountabilityScore: 74,
     phone: "+254 700 000 005",
     email: "governor@nakuru.go.ke",
-    image: "/placeholder.svg?height=150&width=150",
+    photoUrl: "/placeholder.svg?height=150&width=150",
     recentActions: [
       "Launched agricultural modernization",
       "Improved healthcare services",
       "Addressed hospital expansion delays",
     ],
     keyProjects: ["Nakuru Level 5 Hospital", "Agricultural Hub", "Tourism Circuit"],
-    socialMedia: {
-      twitter: "@SusanKihika",
-      facebook: "Susan Kihika Official",
-    },
+    socialTwitter: "@SusanKihika",
+    socialFacebook: "Susan Kihika Official",
   },
   {
     id: "6",
@@ -154,13 +144,11 @@ const fallbackLeaders: Leader[] = [
     accountabilityScore: 81,
     phone: "+254 700 000 006",
     email: "governor@uasingishu.go.ke",
-    image: "/placeholder.svg?height=150&width=150",
+    photoUrl: "/placeholder.svg?height=150&width=150",
     recentActions: ["Completed sports complex", "Launched digital literacy program", "Improved road infrastructure"],
     keyProjects: ["Eldoret Sports Complex", "Digital Literacy Program", "Road Network Upgrade"],
-    socialMedia: {
-      twitter: "@JonathanBii",
-      facebook: "Jonathan Bii Official",
-    },
+    socialTwitter: "@JonathanBii",
+    socialFacebook: "Jonathan Bii Official",
   },
 ]
 
@@ -482,7 +470,7 @@ export default function LeadersPage() {
                   <div>
                     <h4 className="text-sm font-medium text-foreground mb-2">Recent actions</h4>
                     <ul className="space-y-1 text-xs text-muted-foreground">
-                      {leader.recentActions.slice(0, 2).map((action) => (
+                      {(Array.isArray(leader.recentActions) ? leader.recentActions : []).slice(0, 2).map((action) => (
                         <li key={action} className="flex items-start">
                           <div className="mt-2 h-1 w-1 rounded-full bg-foreground/60" />
                           <span className="ml-2">{action}</span>
