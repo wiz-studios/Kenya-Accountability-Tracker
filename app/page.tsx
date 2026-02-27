@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useMemo, useState } from "react"
 import {
   ArrowRight,
   BarChart3,
@@ -18,8 +19,9 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { formatDate, formatNumber } from "@/lib/formatters"
 import { stateHouseExpenditures } from "@/lib/state-house"
+import type { AnalyticsSnapshot } from "@/lib/data/analytics"
 
-const headlineStats = [
+const fallbackHeadlineStats = [
   { label: "Stalled Projects", value: "234", note: "Across 47 counties" },
   { label: "Public Funds at Risk", value: "KSh 156.7B", note: "Verified exposure" },
   { label: "Open Investigations", value: "89", note: "Active accountability cases" },
@@ -50,7 +52,7 @@ const liveSignals = [
   },
 ]
 
-const countyPulse = [
+const fallbackCountyPulse = [
   { county: "Nairobi", exposure: 78, value: "KSh 23.4B", projects: 45 },
   { county: "Mombasa", exposure: 66, value: "KSh 18.2B", projects: 28 },
   { county: "Kisumu", exposure: 52, value: "KSh 12.1B", projects: 19 },
@@ -72,7 +74,7 @@ const integrityPillars = [
   },
 ]
 
-const sectorSignals = [
+const fallbackSectorSignals = [
   { sector: "Transport", percent: 29, value: "KSh 45.2B" },
   { sector: "Health", percent: 22, value: "KSh 34.1B" },
   { sector: "Education", percent: 18, value: "KSh 28.7B" },
@@ -106,6 +108,51 @@ const stateHouseOverview = [
 const formatStateHouseAmount = (value: number) => `KSh ${formatNumber(Math.round(value))}M`
 
 export default function HomePage() {
+  const [analytics, setAnalytics] = useState<AnalyticsSnapshot | null>(null)
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch("/api/analytics")
+        if (!res.ok) return
+        const body = await res.json()
+        setAnalytics(body.data ?? null)
+      } catch {
+        setAnalytics(null)
+      }
+    }
+    load()
+  }, [])
+
+  const headlineStats = useMemo(() => {
+    if (!analytics?.overview) return fallbackHeadlineStats
+    return [
+      { label: "Stalled Projects", value: String(analytics.overview.stalledProjects), note: "Across tracked counties" },
+      { label: "Public Funds at Risk", value: `KSh ${analytics.overview.totalLossBillions}B`, note: "Estimated exposure" },
+      { label: "Open Investigations", value: String(analytics.overview.activeCases), note: "Active accountability cases" },
+      { label: "Citizen Reports", value: "Live", note: "Submitted via portal" },
+    ]
+  }, [analytics])
+
+  const countyPulse = useMemo(() => {
+    if (!analytics?.countyRankings?.length) return fallbackCountyPulse
+    return analytics.countyRankings.slice(0, 4).map((item) => ({
+      county: item.county,
+      exposure: Math.max(100 - Number(item.score || 0), 5),
+      value: `KSh ${Number(item.loss || 0)}B`,
+      projects: Number(item.projects || 0),
+    }))
+  }, [analytics])
+
+  const sectorSignals = useMemo(() => {
+    if (!analytics?.sectorAnalysis?.length) return fallbackSectorSignals
+    return analytics.sectorAnalysis.slice(0, 5).map((item) => ({
+      sector: item.sector,
+      percent: Number(item.percentage || 0),
+      value: `KSh ${Number(item.loss || 0)}B`,
+    }))
+  }, [analytics])
+
   return (
     <div className="min-h-screen">
       <section className="relative overflow-hidden">

@@ -1,5 +1,5 @@
 export interface EnhancedProject {
-  id: number
+  id: string | number
   name: string
   description: string
   county: string

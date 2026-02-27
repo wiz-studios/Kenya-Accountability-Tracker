@@ -8,11 +8,12 @@ import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { County, Constituency } from "@/lib/enhanced-kenya-locations"
-import { enhancedProjectData, getProjectsByLocation, type EnhancedProject } from "@/lib/enhanced-project-data"
+import type { EnhancedProject } from "@/lib/enhanced-project-data"
 import Link from "next/link"
 import { formatDate, formatYear } from "@/lib/formatters"
 
 interface ProjectListDisplayProps {
+  projects: EnhancedProject[]
   selectedCounty: County | null
   selectedConstituency: Constituency | null
   isLoading?: boolean
@@ -66,20 +67,13 @@ const statusConfig = {
 }
 
 export function ProjectListDisplay({
+  projects,
   selectedCounty,
   selectedConstituency,
   isLoading = false,
   className,
 }: ProjectListDisplayProps) {
-  // Filter projects based on location
-  const filteredProjects = useMemo(() => {
-    if (selectedConstituency) {
-      return getProjectsByLocation(selectedCounty?.id, selectedConstituency.id)
-    } else if (selectedCounty) {
-      return getProjectsByLocation(selectedCounty.id)
-    }
-    return enhancedProjectData
-  }, [selectedCounty, selectedConstituency])
+  const filteredProjects = projects
 
   // Group projects by status
   const projectsByStatus = useMemo(() => {

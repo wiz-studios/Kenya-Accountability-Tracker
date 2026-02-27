@@ -1,185 +1,23 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { Search, Filter, MapPin, Users, AlertTriangle, Shield, Phone, ExternalLink } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useEffect, useMemo, useState } from "react"
+import { AlertTriangle, ExternalLink, Filter, MapPin, Phone, Search, Shield, Users } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SimpleLocationSelector } from "@/components/simple-location-selector"
 import type { County, Constituency } from "@/lib/enhanced-kenya-locations"
 import { formatNumber } from "@/lib/formatters"
-import type { Leader, Senator } from "@/lib/types"
-import { senatorsData } from "@/lib/senators-data"
-
-const fallbackLeaders: Leader[] = [
-  {
-    id: "1",
-    name: "Johnson Sakaja",
-    position: "County Governor",
-    county: "Nairobi",
-    constituency: "County-wide",
-    party: "UDA",
-    term: "2022-2027",
-    allegations: 2,
-    projectsOverseen: 15,
-    budgetManaged: 37500000000,
-    accountabilityScore: 68,
-    phone: "+254 700 000 001",
-    email: "governor@nairobi.go.ke",
-    photoUrl: "/placeholder.svg?height=150&width=150",
-    recentActions: [
-      "Launched Nairobi Digital City project",
-      "Addressed BRT system delays",
-      "Signed MOU for affordable housing",
-    ],
-    keyProjects: ["Nairobi BRT System", "Digital City Initiative", "Green City Program"],
-    socialTwitter: "@SakajaJohnson",
-    socialFacebook: "Johnson Sakaja Official",
-  },
-  {
-    id: "2",
-    name: "Hon. Babu Owino",
-    position: "Member of Parliament",
-    county: "Nairobi",
-    constituency: "Embakasi East",
-    party: "ODM",
-    term: "2022-2027",
-    allegations: 1,
-    projectsOverseen: 8,
-    budgetManaged: 2100000000,
-    accountabilityScore: 72,
-    phone: "+254 700 000 002",
-    email: "mp@embakasi-east.go.ke",
-    photoUrl: "/placeholder.svg?height=150&width=150",
-    recentActions: [
-      "Questioned stalled road projects",
-      "Advocated for youth employment",
-      "Launched education bursary program",
-    ],
-    keyProjects: ["Embakasi East Roads", "Youth Empowerment Center", "Education Bursary Fund"],
-    socialTwitter: "@HonBabuOwino",
-    socialFacebook: "Babu Owino Official",
-  },
-  {
-    id: "3",
-    name: "Prof. Anyang' Nyong'o",
-    position: "County Governor",
-    county: "Kisumu",
-    constituency: "County-wide",
-    party: "ODM",
-    term: "2017-2027",
-    allegations: 0,
-    projectsOverseen: 12,
-    budgetManaged: 15800000000,
-    accountabilityScore: 85,
-    phone: "+254 700 000 003",
-    email: "governor@kisumu.go.ke",
-    photoUrl: "/placeholder.svg?height=150&width=150",
-    recentActions: [
-      "Completed water treatment plant",
-      "Launched smart city initiative",
-      "Improved healthcare facilities",
-    ],
-    keyProjects: ["Kisumu Smart City", "Water Treatment Expansion", "Port Development"],
-    socialTwitter: "@ProfNyongo",
-    socialFacebook: "Anyang Nyongo Official",
-  },
-  {
-    id: "4",
-    name: "Hon. Joshua Oron",
-    position: "Member of Parliament",
-    county: "Kisumu",
-    constituency: "Kisumu Central",
-    party: "ODM",
-    term: "2022-2027",
-    allegations: 0,
-    projectsOverseen: 6,
-    budgetManaged: 1800000000,
-    accountabilityScore: 78,
-    phone: "+254 700 000 004",
-    email: "mp@kisumu-central.go.ke",
-    photoUrl: "/placeholder.svg?height=150&width=150",
-    recentActions: ["Supported port modernization", "Advocated for fishing industry", "Promoted tourism development"],
-    keyProjects: ["Kisumu Port Upgrade", "Fishing Industry Support", "Tourism Promotion"],
-    socialTwitter: "@JoshuaOron",
-    socialFacebook: "Joshua Oron MP",
-  },
-  {
-    id: "5",
-    name: "Susan Kihika",
-    position: "County Governor",
-    county: "Nakuru",
-    constituency: "County-wide",
-    party: "UDA",
-    term: "2022-2027",
-    allegations: 1,
-    projectsOverseen: 18,
-    budgetManaged: 12400000000,
-    accountabilityScore: 74,
-    phone: "+254 700 000 005",
-    email: "governor@nakuru.go.ke",
-    photoUrl: "/placeholder.svg?height=150&width=150",
-    recentActions: [
-      "Launched agricultural modernization",
-      "Improved healthcare services",
-      "Addressed hospital expansion delays",
-    ],
-    keyProjects: ["Nakuru Level 5 Hospital", "Agricultural Hub", "Tourism Circuit"],
-    socialTwitter: "@SusanKihika",
-    socialFacebook: "Susan Kihika Official",
-  },
-  {
-    id: "6",
-    name: "Jonathan Bii",
-    position: "County Governor",
-    county: "Uasin Gishu",
-    constituency: "County-wide",
-    party: "UDA",
-    term: "2022-2027",
-    allegations: 0,
-    projectsOverseen: 14,
-    budgetManaged: 11200000000,
-    accountabilityScore: 81,
-    phone: "+254 700 000 006",
-    email: "governor@uasingishu.go.ke",
-    photoUrl: "/placeholder.svg?height=150&width=150",
-    recentActions: ["Completed sports complex", "Launched digital literacy program", "Improved road infrastructure"],
-    keyProjects: ["Eldoret Sports Complex", "Digital Literacy Program", "Road Network Upgrade"],
-    socialTwitter: "@JonathanBii",
-    socialFacebook: "Jonathan Bii Official",
-  },
-]
+import type { Leader } from "@/lib/types"
 
 const positions = ["All Positions", "County Governor", "Member of Parliament", "Senator", "County Executive"]
 const parties = ["All Parties", "UDA", "ODM", "Jubilee", "ANC", "DAP-K", "Other"]
 
-// Convert senators data to Leader format
-const senatorsAsLeaders: Leader[] = senatorsData.map((senator) => ({
-  id: senator.id,
-  name: senator.name,
-  position: "Senator",
-  county: senator.county,
-  constituency: "County-wide",
-  party: senator.party,
-  term: senator.term,
-  allegations: 0,
-  projectsOverseen: 0,
-  budgetManaged: 0,
-  accountabilityScore: 0,
-  phone: senator.phone || "",
-  email: senator.email || "",
-  photoUrl: senator.image || "/placeholder.svg?height=150&width=150",
-  recentActions: [],
-  keyProjects: [],
-  socialTwitter: "",
-  socialFacebook: "",
-}))
-
 export default function LeadersPage() {
-  const [leaders, setLeaders] = useState<Leader[]>([...fallbackLeaders, ...senatorsAsLeaders])
+  const [leaders, setLeaders] = useState<Leader[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCounty, setSelectedCounty] = useState<County | null>(null)
   const [selectedConstituency, setSelectedConstituency] = useState<Constituency | null>(null)
@@ -194,116 +32,49 @@ export default function LeadersPage() {
       setLoading(true)
       setError(null)
       try {
-        // pull a generous slice to avoid missing records (MPs + Governors)
-        const res = await fetch("/api/leaders?limit=1000")
-        if (!res.ok) {
-          throw new Error(`Failed to fetch leaders (${res.status})`)
-        }
+        const query = new URLSearchParams({
+          limit: "1000",
+          sort: sortBy,
+        })
+        if (selectedCounty) query.set("county", selectedCounty.name)
+        if (selectedConstituency) query.set("constituency", selectedConstituency.name)
+        if (selectedPosition !== "All Positions") query.set("position", selectedPosition)
+        if (selectedParty !== "All Parties") query.set("party", selectedParty)
+        if (searchTerm) query.set("q", searchTerm)
+
+        const res = await fetch(`/api/leaders?${query.toString()}`)
         const body = await res.json()
-        if (body.data && Array.isArray(body.data)) {
-          // de-duplicate by normalized name + position + county
-          const seen = new Set<string>()
-          const deduped: Leader[] = []
-          const normalizeKey = (value: string | null | undefined) =>
-            (value || "").toLowerCase().replace(/\s+/g, " ").trim()
-          for (const leader of body.data as Leader[]) {
-            const key = [
-              normalizeKey(leader.name),
-              normalizeKey(leader.position),
-              normalizeKey(leader.county),
-            ].join("|")
-            if (seen.has(key)) continue
-            seen.add(key)
-            deduped.push(leader)
-          }
-          // Add senators to the leaders list
-          const combinedLeaders = deduped.length ? deduped : fallbackLeaders
-          setLeaders([...combinedLeaders, ...senatorsAsLeaders])
-        } else {
-          setError("Leaders API returned no data, showing fallback content.")
-          setLeaders([...fallbackLeaders, ...senatorsAsLeaders])
-        }
+        if (!res.ok) throw new Error(body.error || `Failed to fetch leaders (${res.status})`)
+        setLeaders(Array.isArray(body.data) ? body.data : [])
       } catch (err) {
-        setError((err as Error).message)
-        setLeaders([...fallbackLeaders, ...senatorsAsLeaders])
+        setError(err instanceof Error ? err.message : "Could not load leaders")
+        setLeaders([])
       } finally {
         setLoading(false)
       }
     }
     load()
-  }, [])
+  }, [searchTerm, selectedCounty, selectedConstituency, selectedPosition, selectedParty, sortBy])
 
-  const handleLocationChange = (county: County | null, constituency: Constituency | null) => {
-    setSelectedCounty(county)
-    setSelectedConstituency(constituency)
-  }
+  const totalLeaders = leaders.length
+  const leadersWithAllegations = leaders.filter((leader) => leader.allegations > 0).length
+  const averageScore = Math.round(leaders.reduce((sum, leader) => sum + leader.accountabilityScore, 0) / totalLeaders || 0)
+  const totalBudget = leaders.reduce((sum, leader) => sum + leader.budgetManaged, 0)
 
-  const normalize = (value: string | null | undefined) =>
-    (value || "")
-      .toLowerCase()
-      .replace(/county$/i, "")
-      .replace(/\s+/g, " ")
-      .trim()
-
-  const filteredLeaders = leaders.filter((leader) => {
-    // Position filter - this should be the primary filter
-    if (selectedPosition !== "All Positions" && leader.position !== selectedPosition) {
-      return false
-    }
-
-    // Party filter
-    if (selectedParty !== "All Parties" && leader.party !== selectedParty) {
-      return false
-    }
-
-    // Search filter
-    if (searchTerm) {
-      const search = searchTerm.toLowerCase()
-      const matchesSearch =
-        leader.name.toLowerCase().includes(search) ||
-        leader.position.toLowerCase().includes(search) ||
-        leader.county.toLowerCase().includes(search)
-      if (!matchesSearch) return false
-    }
-
-    // Location filter - county
-    if (selectedCounty) {
-      const leaderCounty = leader.county.toLowerCase().replace(/county$/i, "").trim()
-      const selectedCountyName = selectedCounty.name.toLowerCase().replace(/county$/i, "").trim()
-      if (leaderCounty !== selectedCountyName) return false
-    }
-
-    // Location filter - constituency
-    if (selectedConstituency) {
-      const isCountyWide = leader.constituency.toLowerCase() === "county-wide"
-      const matchesConstituency = leader.constituency === selectedConstituency.name
-      if (!isCountyWide && !matchesConstituency) return false
-    }
-
-    return true
-  })
-
-  const sortedLeaders = [...filteredLeaders].sort((a, b) => {
-    switch (sortBy) {
-      case "score":
-        return b.accountabilityScore - a.accountabilityScore
-      case "allegations":
-        return a.allegations - b.allegations
-      case "budget":
-        return b.budgetManaged - a.budgetManaged
-      case "name":
-        return a.name.localeCompare(b.name)
-      default:
-        return 0
-    }
-  })
-
-  const totalLeaders = filteredLeaders.length
-  const leadersWithAllegations = filteredLeaders.filter((l) => l.allegations > 0).length
-  const averageScore = Math.round(
-    filteredLeaders.reduce((sum, l) => sum + l.accountabilityScore, 0) / totalLeaders || 0,
-  )
-  const totalBudget = filteredLeaders.reduce((sum, l) => sum + l.budgetManaged, 0)
+  const sortedLeaders = useMemo(() => {
+    return [...leaders].sort((a, b) => {
+      switch (sortBy) {
+        case "allegations":
+          return a.allegations - b.allegations
+        case "budget":
+          return b.budgetManaged - a.budgetManaged
+        case "name":
+          return a.name.localeCompare(b.name)
+        default:
+          return b.accountabilityScore - a.accountabilityScore
+      }
+    })
+  }, [leaders, sortBy])
 
   return (
     <div className="min-h-screen">
@@ -312,7 +83,7 @@ export default function LeadersPage() {
           <Badge className="bg-foreground text-background">Leadership accountability</Badge>
           <h1 className="mt-4 font-display text-3xl text-foreground md:text-4xl">Leadership Intelligence</h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">
-            Track the performance and accountability of governors, MPs, and other leaders across all counties.
+            API-backed leadership profiles with accountability metrics and governance signals.
           </p>
           {error && (
             <div className="mt-3 rounded-2xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -324,7 +95,7 @@ export default function LeadersPage() {
               { label: "Leaders tracked", value: totalLeaders, icon: Users },
               { label: "With allegations", value: leadersWithAllegations, icon: AlertTriangle },
               { label: "Average score", value: averageScore, icon: Shield },
-              { label: "Total budget", value: `KSh ${formatNumber(Math.round(totalBudget / 1000000000))}B`, icon: Users },
+              { label: "Total budget", value: `KSh ${formatNumber(Math.round(totalBudget / 1_000_000_000))}B`, icon: Users },
             ].map((stat) => (
               <Card key={stat.label} className="border-foreground/10 bg-white/90 shadow-sm">
                 <CardContent className="flex items-center gap-3 p-4">
@@ -332,7 +103,7 @@ export default function LeadersPage() {
                     <stat.icon className="h-5 w-5 text-foreground" />
                   </div>
                   <div>
-                    <div className="text-xl font-semibold text-foreground">{stat.value}</div>
+                    <div className="text-xl font-semibold text-foreground">{loading ? "..." : stat.value}</div>
                     <div className="text-xs uppercase tracking-wide text-muted-foreground">{stat.label}</div>
                   </div>
                 </CardContent>
@@ -361,7 +132,7 @@ export default function LeadersPage() {
                   <Input
                     placeholder="Search by name..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(event) => setSearchTerm(event.target.value)}
                     className="pl-10"
                   />
                 </div>
@@ -371,7 +142,13 @@ export default function LeadersPage() {
                 <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Location
                 </label>
-                <SimpleLocationSelector onLocationChange={handleLocationChange} placeholder="Select location" />
+                <SimpleLocationSelector
+                  onLocationChange={(county, constituency) => {
+                    setSelectedCounty(county)
+                    setSelectedConstituency(constituency)
+                  }}
+                  placeholder="Select location"
+                />
               </div>
 
               <div>
@@ -432,18 +209,13 @@ export default function LeadersPage() {
       </section>
 
       <section className="container mx-auto px-4 pb-12">
-        {loading && (
-          <Card className="mb-4 border-foreground/10 bg-white/90 shadow-sm">
-            <CardContent className="p-4 text-sm text-muted-foreground">Loading leaders from Supabase...</CardContent>
-          </Card>
-        )}
         {sortedLeaders.length === 0 ? (
           <Card className="border-foreground/10 bg-white/90 shadow-sm">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Users className="mb-4 h-12 w-12 text-muted-foreground" />
               <h3 className="text-lg font-medium text-foreground">No leaders found</h3>
-              <p className="text-muted-foreground text-center">
-                Try adjusting your search criteria or filters to find leaders.
+              <p className="text-center text-muted-foreground">
+                Try adjusting filters or ensure leader data is available in the configured source.
               </p>
             </CardContent>
           </Card>
@@ -462,24 +234,17 @@ export default function LeadersPage() {
                         <div>{leader.position}</div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <MapPin className="h-3 w-3" />
-                          <span>
-                            {leader.constituency === "County-wide"
-                              ? `${leader.county} County`
-                              : `${leader.constituency}, ${leader.county}`}
-                          </span>
+                          <span>{leader.constituency === "County-wide" ? `${leader.county} County` : `${leader.constituency}, ${leader.county}`}</span>
                         </div>
                       </CardDescription>
                     </div>
                   </div>
-
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <Badge variant="outline" className="border-foreground/20 text-foreground">
                       {leader.party}
                     </Badge>
                     <Badge variant={leader.allegations === 0 ? "default" : "destructive"}>
-                      {leader.allegations === 0
-                        ? "Clean record"
-                        : `${leader.allegations} allegation${leader.allegations > 1 ? "s" : ""}`}
+                      {leader.allegations === 0 ? "Clean record" : `${leader.allegations} allegation(s)`}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -501,7 +266,7 @@ export default function LeadersPage() {
                     <div>
                       <div className="text-muted-foreground">Budget</div>
                       <div className="font-semibold text-foreground">
-                        KSh {(leader.budgetManaged / 1000000000).toFixed(1)}B
+                        KSh {(leader.budgetManaged / 1_000_000_000).toFixed(1)}B
                       </div>
                     </div>
                     <div>
@@ -512,18 +277,6 @@ export default function LeadersPage() {
                       <div className="text-muted-foreground">Party</div>
                       <div className="font-semibold text-foreground">{leader.party}</div>
                     </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-sm font-medium text-foreground mb-2">Recent actions</h4>
-                    <ul className="space-y-1 text-xs text-muted-foreground">
-                      {(Array.isArray(leader.recentActions) ? leader.recentActions : []).slice(0, 2).map((action) => (
-                        <li key={action} className="flex items-start">
-                          <div className="mt-2 h-1 w-1 rounded-full bg-foreground/60" />
-                          <span className="ml-2">{action}</span>
-                        </li>
-                      ))}
-                    </ul>
                   </div>
 
                   <div className="flex items-center gap-2 border-t border-foreground/10 pt-2">
@@ -539,12 +292,6 @@ export default function LeadersPage() {
                 </CardContent>
               </Card>
             ))}
-          </div>
-        )}
-
-        {sortedLeaders.length > 0 && (
-          <div className="mt-8 text-center">
-            <Button variant="outline">Load more leaders</Button>
           </div>
         )}
       </section>

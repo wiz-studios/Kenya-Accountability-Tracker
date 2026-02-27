@@ -1,224 +1,85 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
-  Database,
-  FileText,
-  Shield,
-  ExternalLink,
-  Download,
-  Search,
-  Filter,
   CheckCircle,
-  AlertTriangle,
   Clock,
+  Database,
+  Download,
+  ExternalLink,
+  FileText,
+  Filter,
+  Search,
+  Shield,
 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { formatDate, formatNumber } from "@/lib/formatters"
+import type { DataSource } from "@/lib/types"
 
-const dataSources = [
-  {
-    id: 1,
-    name: "Office of the Auditor General",
-    type: "Government",
-    description: "Official audit reports on government spending and project implementation",
-    url: "https://oagkenya.go.ke",
-    trustScore: 98,
-    lastUpdate: "2025-05-28",
-    recordsCount: 1247,
-    categories: ["Financial Audits", "Performance Audits", "Compliance Audits"],
-    status: "active",
-    frequency: "Quarterly",
-    coverage: "National",
-    dataTypes: ["PDF Reports", "Financial Statements", "Audit Findings"],
-  },
-  {
-    id: 2,
-    name: "Ethics and Anti-Corruption Commission (EACC)",
-    type: "Government",
-    description: "Corruption cases, investigations, and asset recovery information",
-    url: "https://eacc.go.ke",
-    trustScore: 95,
-    lastUpdate: "2025-06-01",
-    recordsCount: 892,
-    categories: ["Corruption Cases", "Asset Recovery", "Investigations"],
-    status: "active",
-    frequency: "Monthly",
-    coverage: "National",
-    dataTypes: ["Case Files", "Investigation Reports", "Asset Declarations"],
-  },
-  {
-    id: 3,
-    name: "Kenya Open Data Portal",
-    type: "Government",
-    description: "Government datasets including budgets, procurement, and project information",
-    url: "https://opendata.go.ke",
-    trustScore: 92,
-    lastUpdate: "2025-06-02",
-    recordsCount: 2156,
-    categories: ["Budgets", "Procurement", "Projects", "Demographics"],
-    status: "active",
-    frequency: "Weekly",
-    coverage: "National",
-    dataTypes: ["CSV", "JSON", "XML", "API"],
-  },
-  {
-    id: 4,
-    name: "Transparency International Kenya",
-    type: "NGO",
-    description: "Research reports on corruption trends and governance issues",
-    url: "https://tikenya.org",
-    trustScore: 90,
-    lastUpdate: "2025-05-15",
-    recordsCount: 234,
-    categories: ["Corruption Indices", "Research Reports", "Policy Analysis"],
-    status: "active",
-    frequency: "Quarterly",
-    coverage: "National",
-    dataTypes: ["Research Papers", "Surveys", "Policy Briefs"],
-  },
-  {
-    id: 5,
-    name: "Daily Nation Archives",
-    type: "Media",
-    description: "News articles and investigative reports on governance and corruption",
-    url: "https://nation.africa",
-    trustScore: 85,
-    lastUpdate: "2025-06-03",
-    recordsCount: 3421,
-    categories: ["News Articles", "Investigations", "Opinion Pieces"],
-    status: "active",
-    frequency: "Daily",
-    coverage: "National",
-    dataTypes: ["Articles", "Videos", "Images"],
-  },
-  {
-    id: 6,
-    name: "The Standard Digital",
-    type: "Media",
-    description: "News coverage of government projects and accountability issues",
-    url: "https://standardmedia.co.ke",
-    trustScore: 83,
-    lastUpdate: "2025-06-03",
-    recordsCount: 2876,
-    categories: ["News", "Business", "Politics"],
-    status: "active",
-    frequency: "Daily",
-    coverage: "National",
-    dataTypes: ["Articles", "Videos", "Podcasts"],
-  },
-  {
-    id: 7,
-    name: "Citizen Reports Database",
-    type: "Crowdsourced",
-    description: "Verified reports submitted by citizens about stalled projects and corruption",
-    url: "Internal",
-    trustScore: 75,
-    lastUpdate: "2025-06-03",
-    recordsCount: 567,
-    categories: ["Project Reports", "Corruption Reports", "Evidence"],
-    status: "active",
-    frequency: "Real-time",
-    coverage: "National",
-    dataTypes: ["Reports", "Images", "Documents", "Videos"],
-  },
-  {
-    id: 8,
-    name: "Parliamentary Hansard",
-    type: "Government",
-    description: "Official records of parliamentary proceedings and debates",
-    url: "https://parliament.go.ke",
-    trustScore: 94,
-    lastUpdate: "2025-06-02",
-    recordsCount: 1834,
-    categories: ["Debates", "Committee Reports", "Bills"],
-    status: "active",
-    frequency: "Daily",
-    coverage: "National",
-    dataTypes: ["Transcripts", "Audio", "Video"],
-  },
-]
-
-const recentReports = [
-  {
-    title: "Auditor General Report on County Governments FY 2023/24",
-    source: "Office of the Auditor General",
-    date: "2025-05-28",
-    type: "Audit Report",
-    findings: "KSh 12.4B in questionable expenditure across 15 counties",
-    url: "#",
-  },
-  {
-    title: "EACC Investigation: Nairobi County Procurement Irregularities",
-    source: "EACC",
-    date: "2025-06-01",
-    type: "Investigation",
-    findings: "Irregular procurement worth KSh 2.1B identified",
-    url: "#",
-  },
-  {
-    title: "TI Kenya Corruption Index 2024",
-    source: "Transparency International Kenya",
-    date: "2025-05-15",
-    type: "Research",
-    findings: "Kenya ranks 123/180 in global corruption perception index",
-    url: "#",
-  },
-  {
-    title: "Parliamentary Committee Report on Stalled Projects",
-    source: "Parliamentary Hansard",
-    date: "2025-05-20",
-    type: "Committee Report",
-    findings: "234 stalled projects worth KSh 156B identified",
-    url: "#",
-  },
-]
+type SourceReport = {
+  title: string
+  source: string
+  date: string
+  type: string
+  findings: string
+  url: string
+}
 
 export default function DataSourcesPage() {
+  const [sources, setSources] = useState<DataSource[]>([])
+  const [recentReports, setRecentReports] = useState<SourceReport[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedType, setSelectedType] = useState("All Types")
   const [selectedStatus, setSelectedStatus] = useState("All Status")
   const [sortBy, setSortBy] = useState("trustScore")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const sourceTypes = ["All Types", "Government", "NGO", "Media", "Crowdsourced"]
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const query = new URLSearchParams({
+          sort: sortBy,
+          q: searchTerm,
+          includeReports: "true",
+          limit: "1000",
+        })
+        if (selectedType !== "All Types") query.set("type", selectedType)
+        if (selectedStatus !== "All Status") query.set("status", selectedStatus.toLowerCase())
+
+        const res = await fetch(`/api/sources?${query.toString()}`)
+        const body = await res.json()
+        if (!res.ok) throw new Error(body.error || `Failed to fetch sources (${res.status})`)
+        setSources(Array.isArray(body.data) ? body.data : [])
+        setRecentReports(Array.isArray(body.recentReports) ? body.recentReports : [])
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Could not load sources")
+        setSources([])
+        setRecentReports([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [searchTerm, selectedType, selectedStatus, sortBy])
+
+  const sourceTypes = useMemo(
+    () => ["All Types", ...Array.from(new Set(sources.map((source) => source.type))).sort()],
+    [sources],
+  )
   const statusOptions = ["All Status", "active", "inactive", "pending"]
 
-  const filteredSources = dataSources.filter((source) => {
-    const matchesSearch =
-      source.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      source.description.toLowerCase().includes(searchTerm.toLowerCase())
-
-    const matchesType = selectedType === "All Types" || source.type === selectedType
-    const matchesStatus = selectedStatus === "All Status" || source.status === selectedStatus
-
-    return matchesSearch && matchesType && matchesStatus
-  })
-
-  const sortedSources = [...filteredSources].sort((a, b) => {
-    switch (sortBy) {
-      case "trustScore":
-        return b.trustScore - a.trustScore
-      case "records":
-        return b.recordsCount - a.recordsCount
-      case "name":
-        return a.name.localeCompare(b.name)
-      case "lastUpdate":
-        return new Date(b.lastUpdate).getTime() - new Date(a.lastUpdate).getTime()
-      default:
-        return 0
-    }
-  })
-
-  const totalSources = filteredSources.length
-  const averageTrustScore = Math.round(filteredSources.reduce((sum, s) => sum + s.trustScore, 0) / totalSources || 0)
-  const totalRecords = filteredSources.reduce((sum, s) => sum + s.recordsCount, 0)
-  const activeSources = filteredSources.filter((s) => s.status === "active").length
+  const averageTrustScore = Math.round(sources.reduce((sum, source) => sum + source.trustScore, 0) / sources.length || 0)
+  const totalRecords = sources.reduce((sum, source) => sum + source.recordsCount, 0)
+  const activeSources = sources.filter((source) => source.status === "active").length
 
   return (
     <div className="min-h-screen">
@@ -227,16 +88,20 @@ export default function DataSourcesPage() {
           <Badge className="bg-foreground text-background">Data intelligence</Badge>
           <h1 className="mt-4 font-display text-3xl text-foreground md:text-4xl">Data Sources Library</h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">
-            Comprehensive repository of official reports, investigations, and verified information feeding the
-            accountability platform.
+            Live registry of datasets, report streams, and source trust scores powering KAT.
           </p>
+          {error && (
+            <div className="mt-4 rounded-2xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              {error}
+            </div>
+          )}
         </div>
       </section>
 
       <section className="container mx-auto px-4 py-8">
         <div className="grid gap-4 md:grid-cols-4">
           {[
-            { label: "Data sources", value: totalSources, icon: Database },
+            { label: "Data sources", value: sources.length, icon: Database },
             { label: "Active sources", value: activeSources, icon: CheckCircle },
             { label: "Avg trust score", value: `${averageTrustScore}%`, icon: Shield },
             { label: "Total records", value: formatNumber(totalRecords), icon: FileText },
@@ -247,7 +112,7 @@ export default function DataSourcesPage() {
                   <stat.icon className="h-5 w-5 text-foreground" />
                 </div>
                 <div>
-                  <div className="text-xl font-semibold text-foreground">{stat.value}</div>
+                  <div className="text-xl font-semibold text-foreground">{loading ? "..." : stat.value}</div>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground">{stat.label}</div>
                 </div>
               </CardContent>
@@ -292,7 +157,7 @@ export default function DataSourcesPage() {
                       <Input
                         placeholder="Search sources..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(event) => setSearchTerm(event.target.value)}
                         className="pl-10"
                       />
                     </div>
@@ -355,21 +220,17 @@ export default function DataSourcesPage() {
             </Card>
 
             <div className="grid gap-6 lg:grid-cols-2">
-              {sortedSources.map((source) => (
+              {sources.map((source) => (
                 <Card key={source.id} className="border-foreground/10 bg-white/90 shadow-sm">
                   <CardHeader>
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Badge variant="outline" className="border-foreground/20 text-foreground">
-                            {source.type}
-                          </Badge>
-                          <Badge variant={source.status === "active" ? "default" : "secondary"}>{source.status}</Badge>
-                        </div>
-                        <CardTitle className="mt-3 text-lg text-foreground">{source.name}</CardTitle>
-                        <CardDescription className="mt-2">{source.description}</CardDescription>
-                      </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="outline" className="border-foreground/20 text-foreground">
+                        {source.type}
+                      </Badge>
+                      <Badge variant={source.status === "active" ? "default" : "secondary"}>{source.status}</Badge>
                     </div>
+                    <CardTitle className="text-lg text-foreground">{source.name}</CardTitle>
+                    <CardDescription>{source.description}</CardDescription>
                   </CardHeader>
 
                   <CardContent className="space-y-4">
@@ -400,33 +261,13 @@ export default function DataSourcesPage() {
                       </div>
                     </div>
 
-                    <div>
-                      <h4 className="text-sm font-medium text-foreground mb-2">Data categories</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {source.categories.map((category) => (
-                          <Badge key={category} variant="outline" className="border-foreground/20 text-xs text-foreground">
-                            {category}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="text-sm font-medium text-foreground mb-2">Available formats</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {source.dataTypes.map((type) => (
-                          <Badge key={type} variant="secondary" className="text-xs">
-                            {type}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-
                     <div className="flex gap-2 border-t border-foreground/10 pt-2">
                       {source.url !== "Internal" && (
-                        <Button variant="outline" size="sm" className="flex-1">
-                          <ExternalLink className="mr-1 h-3 w-3" />
-                          Visit source
+                        <Button variant="outline" size="sm" className="flex-1" asChild>
+                          <a href={source.url} target="_blank" rel="noreferrer">
+                            <ExternalLink className="mr-1 h-3 w-3" />
+                            Visit source
+                          </a>
                         </Button>
                       )}
                       <Button variant="outline" size="sm" className="flex-1">
@@ -447,7 +288,7 @@ export default function DataSourcesPage() {
                   <FileText className="h-5 w-5" />
                   Recent reports & publications
                 </CardTitle>
-                <CardDescription>Latest reports, investigations, and publications from our data sources</CardDescription>
+                <CardDescription>Latest reports from connected data sources</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {recentReports.map((report) => (
@@ -464,89 +305,45 @@ export default function DataSourcesPage() {
                         <p className="mt-1 text-sm text-muted-foreground">Source: {report.source}</p>
                         <p className="mt-2 text-sm">{report.findings}</p>
                       </div>
-                      <Button variant="ghost" size="sm">
-                        <ExternalLink className="h-4 w-4" />
+                      <Button variant="ghost" size="sm" asChild>
+                        <a href={report.url} target="_blank" rel="noreferrer">
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
                       </Button>
                     </div>
                   </div>
                 ))}
-                <div className="text-center">
-                  <Button variant="outline">View all reports</Button>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <Card className="border-foreground/10 bg-background shadow-sm">
+                    <CardContent className="space-y-2 p-4 text-sm">
+                      <div className="flex items-center gap-2 text-foreground">
+                        <CheckCircle className="h-4 w-4 text-emerald-500" />
+                        <span>Up to date</span>
+                      </div>
+                      <div className="font-semibold">{activeSources} sources</div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-foreground/10 bg-background shadow-sm">
+                    <CardContent className="space-y-2 p-4 text-sm">
+                      <div className="flex items-center gap-2 text-foreground">
+                        <Clock className="h-4 w-4 text-amber-500" />
+                        <span>Freshness window</span>
+                      </div>
+                      <div className="font-semibold">API-driven</div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-foreground/10 bg-background shadow-sm">
+                    <CardContent className="space-y-2 p-4 text-sm">
+                      <div className="flex items-center gap-2 text-foreground">
+                        <Shield className="h-4 w-4 text-foreground" />
+                        <span>Average trust</span>
+                      </div>
+                      <div className="font-semibold">{averageTrustScore}%</div>
+                    </CardContent>
+                  </Card>
                 </div>
               </CardContent>
             </Card>
-
-            <div className="grid gap-6 md:grid-cols-3">
-              <Card className="border-foreground/10 bg-white/90 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-lg">Data quality</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {[
-                    { label: "Accuracy", value: 94 },
-                    { label: "Completeness", value: 87 },
-                    { label: "Timeliness", value: 91 },
-                  ].map((metric) => (
-                    <div key={metric.label}>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>{metric.label}</span>
-                        <span className="font-semibold text-foreground">{metric.value}%</span>
-                      </div>
-                      <Progress value={metric.value} className="mt-2 h-2 bg-foreground/10" />
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              <Card className="border-foreground/10 bg-white/90 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-lg">Update status</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <CheckCircle className="mr-2 h-4 w-4 text-emerald-500" />
-                      <span>Up to date</span>
-                    </div>
-                    <span className="font-semibold text-foreground">6 sources</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Clock className="mr-2 h-4 w-4 text-amber-500" />
-                      <span>Pending update</span>
-                    </div>
-                    <span className="font-semibold text-foreground">2 sources</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <AlertTriangle className="mr-2 h-4 w-4 text-rose-500" />
-                      <span>Delayed</span>
-                    </div>
-                    <span className="font-semibold text-foreground">0 sources</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-foreground/10 bg-white/90 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-lg">Coverage stats</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span>Counties covered</span>
-                    <span className="font-semibold text-foreground">47/47</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Sectors covered</span>
-                    <span className="font-semibold text-foreground">12/12</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Data freshness</span>
-                    <span className="font-semibold text-foreground">2.3 days avg</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </TabsContent>
         </Tabs>
       </section>

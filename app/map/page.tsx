@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card"
 export default function MapPage() {
   const [selectedCounty, setSelectedCounty] = useState<County | null>(null)
   const [selectedConstituency, setSelectedConstituency] = useState<Constituency | null>(null)
-  const [selectedProject, setSelectedProject] = useState<number | null>(null)
+  const [selectedProject, setSelectedProject] = useState<string | number | null>(null)
 
   const handleFilterChange = useCallback((county: County | null, constituency: Constituency | null) => {
     setSelectedCounty(county)
@@ -18,7 +18,7 @@ export default function MapPage() {
     setSelectedProject(null)
   }, [])
 
-  const handleProjectSelect = useCallback((projectId: number) => {
+  const handleProjectSelect = useCallback((projectId: string | number) => {
     setSelectedProject(projectId)
   }, [])
 

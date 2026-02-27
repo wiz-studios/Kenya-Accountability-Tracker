@@ -1,5 +1,6 @@
 import { getSupabaseServiceRoleClient } from "@/lib/supabase-client"
 import type { Expenditure } from "@/lib/types"
+import { stateHouseExpenditures } from "@/lib/state-house"
 
 export type ExpenditureFilters = {
   search?: string
@@ -23,15 +24,43 @@ const mapExpenditureRow = (row: Record<string, any>): Expenditure => ({
   tags: row.tags ?? [],
 })
 
+const fallbackExpenditures: Expenditure[] = stateHouseExpenditures.map((item, index) => ({
+  id: `expenditure-${index + 1}`,
+  category: "State House",
+  amount: item.amountMillions * 1_000_000,
+  date: item.date,
+  description: item.issue,
+  status: item.status,
+  riskScore: item.risk,
+  referenceUrl: item.reference ?? null,
+  source: item.source ?? null,
+  tags: ["statehouse", "audit"],
+}))
+
 export async function fetchExpenditures(
   filters: ExpenditureFilters = {},
 ): Promise<{ data: Expenditure[]; error?: string }> {
   const supabase = getSupabaseServiceRoleClient()
-  if (!supabase) {
-    return { data: [], error: "Supabase is not configured (missing URL or service role key)" }
-  }
-
   const { search, category, status, minRisk = 0, limit = 60, offset = 0 } = filters
+
+  if (!supabase) {
+    let filtered = [...fallbackExpenditures]
+    if (search) {
+      const needle = search.toLowerCase()
+      filtered = filtered.filter((item) => item.description.toLowerCase().includes(needle))
+    }
+    if (category) {
+      filtered = filtered.filter((item) => item.category === category)
+    }
+    if (status) {
+      filtered = filtered.filter((item) => item.status === status)
+    }
+    if (minRisk) {
+      filtered = filtered.filter((item) => item.riskScore >= minRisk)
+    }
+    filtered.sort((a, b) => b.riskScore - a.riskScore)
+    return { data: filtered.slice(offset, offset + limit) }
+  }
 
   let query = supabase.from("expenditures").select("*", { count: "exact" })
 

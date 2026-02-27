@@ -21,12 +21,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { AdminAuthGate } from "@/components/admin-auth-gate"
 import { DataExtractionEngine } from "@/lib/data-extraction-engine"
 import { StalledProjectAnalyzer } from "@/lib/stalled-project-analyzer"
 import { dataSourcesConfig, stalledProjectCriteria } from "@/lib/data-sources-config"
 import { formatDate, formatDateTime } from "@/lib/formatters"
 
-export default function DataPipelinePage() {
+function DataPipelineContent() {
   const [isExtracting, setIsExtracting] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [extractionResults, setExtractionResults] = useState<any[]>([])
@@ -366,9 +367,9 @@ export default function DataPipelinePage() {
                             <TableCell>
                               <div className="flex flex-wrap gap-1">
                                 {analysis.criteriaResults
-                                  .filter((c) => c.score > 0.7)
+                                  .filter((c: { score: number }) => c.score > 0.7)
                                   .slice(0, 2)
-                                  .map((criteria, i) => (
+                                  .map((criteria: { criteriaName: string }, i: number) => (
                                     <Badge key={i} variant="outline" className="text-xs">
                                       {criteria.criteriaName}
                                     </Badge>
@@ -491,4 +492,8 @@ export default function DataPipelinePage() {
       </section>
     </div>
   )
+}
+
+export default function DataPipelinePage() {
+  return <AdminAuthGate title="Pipeline Management">{() => <DataPipelineContent />}</AdminAuthGate>
 }

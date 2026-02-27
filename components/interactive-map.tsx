@@ -11,8 +11,8 @@ import { getCountyById, type County, type Constituency } from "@/lib/enhanced-ke
 import { enhancedProjectData, getProjectsByLocation } from "@/lib/enhanced-project-data"
 
 interface InteractiveMapProps {
-  selectedProject?: number | null
-  onProjectSelect?: (projectId: number) => void
+  selectedProject?: string | number | null
+  onProjectSelect?: (projectId: string | number) => void
   selectedCounty?: County | null
   selectedConstituency?: Constituency | null
   className?: string

@@ -59,3 +59,76 @@ export type Expenditure = {
   source?: string | null
   tags?: string[] | null
 }
+
+export type DataSource = {
+  id: string
+  name: string
+  type: string
+  description: string
+  url: string
+  trustScore: number
+  status: "active" | "inactive" | "pending"
+  frequency: string
+  coverage: string
+  dataTypes: string[]
+  categories: string[]
+  lastUpdate: string
+  recordsCount: number
+}
+
+export type ReportStatus =
+  | "Pending Review"
+  | "Under Investigation"
+  | "Needs More Info"
+  | "Verified"
+  | "Closed"
+
+export type Report = {
+  id: string
+  publicId: string
+  reportType: string
+  title: string
+  description: string
+  county: string
+  constituency?: string | null
+  projectName?: string | null
+  involvedParties?: string | null
+  estimatedAmount?: number | null
+  occurredOn?: string | null
+  reportedElsewhere?: string | null
+  status: ReportStatus
+  confidenceScore: number
+  isAnonymous: boolean
+  allowContact: boolean
+  submitterName?: string | null
+  submitterEmail?: string | null
+  submitterPhone?: string | null
+  sourceTrust: number
+  verificationNotes?: string | null
+  assignedReviewer?: string | null
+  insertedAt: string
+  updatedAt: string
+}
+
+export type ReportEvidence = {
+  id: string
+  reportId: string
+  label: string
+  fileUrl?: string | null
+  mimeType?: string | null
+  fileSizeBytes?: number | null
+  sourceUrl?: string | null
+  checksum?: string | null
+  verificationState: "unverified" | "verified" | "rejected"
+  insertedAt: string
+}
+
+export type ReportStatusEvent = {
+  id: string
+  reportId: string
+  fromStatus?: ReportStatus | null
+  toStatus: ReportStatus
+  note?: string | null
+  changedBy?: string | null
+  insertedAt: string
+}

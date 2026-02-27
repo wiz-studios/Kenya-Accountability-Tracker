@@ -392,4 +392,4 @@ class DataFetchingService {
 export const dataFetchingService = new DataFetchingService()
 
 // Export types and interfaces
-export type { County, Constituency, FilterOptions }
+export type { County, Constituency }

@@ -98,17 +98,18 @@ export class StalledProjectAnalyzer {
 
     switch (criteria.id) {
       case "timeline_overrun":
+        const timelineThreshold = Number(criteria.threshold) || 0
         const monthsOverdue = this.calculateMonthsOverdue(project)
-        score = monthsOverdue > criteria.threshold ? 1 : Math.min(monthsOverdue / (criteria.threshold as number), 1)
-        details = `Project is ${monthsOverdue} months overdue (threshold: ${criteria.threshold} months)`
+        score = monthsOverdue > timelineThreshold ? 1 : Math.min(monthsOverdue / Math.max(timelineThreshold, 1), 1)
+        details = `Project is ${monthsOverdue} months overdue (threshold: ${timelineThreshold} months)`
         evidence.push({ type: "timeline", monthsOverdue, expectedCompletion: project.expectedCompletion })
         break
 
       case "budget_overrun":
+        const budgetThreshold = Number(criteria.threshold) || 0
         const budgetOverrunRatio = (project.spent - project.budget) / project.budget
-        score =
-          budgetOverrunRatio > criteria.threshold ? 1 : Math.max(budgetOverrunRatio / (criteria.threshold as number), 0)
-        details = `Budget overrun: ${(budgetOverrunRatio * 100).toFixed(1)}% (threshold: ${(criteria.threshold as number) * 100}%)`
+        score = budgetOverrunRatio > budgetThreshold ? 1 : Math.max(budgetOverrunRatio / Math.max(budgetThreshold, 0.0001), 0)
+        details = `Budget overrun: ${(budgetOverrunRatio * 100).toFixed(1)}% (threshold: ${(budgetThreshold * 100).toFixed(1)}%)`
         evidence.push({
           type: "budget",
           overrunRatio: budgetOverrunRatio,
@@ -118,9 +119,10 @@ export class StalledProjectAnalyzer {
         break
 
       case "no_progress_updates":
+        const updateThreshold = Number(criteria.threshold) || 0
         const daysSinceUpdate = this.calculateDaysSinceLastUpdate(project)
-        score = daysSinceUpdate > criteria.threshold ? 1 : Math.min(daysSinceUpdate / (criteria.threshold as number), 1)
-        details = `${daysSinceUpdate} days since last update (threshold: ${criteria.threshold} days)`
+        score = daysSinceUpdate > updateThreshold ? 1 : Math.min(daysSinceUpdate / Math.max(updateThreshold, 1), 1)
+        details = `${daysSinceUpdate} days since last update (threshold: ${updateThreshold} days)`
         evidence.push({ type: "updates", daysSinceUpdate, lastUpdate: project.lastUpdate })
         break
 
