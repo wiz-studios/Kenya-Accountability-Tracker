@@ -1,4 +1,5 @@
 import { getSupabaseServiceRoleClient } from "@/lib/supabase-client"
+import { fromDataSchema } from "@/lib/supabase-data-schema"
 import type { Project } from "@/lib/types"
 import { enhancedProjectData } from "@/lib/enhanced-project-data"
 
@@ -8,6 +9,7 @@ export type ProjectFilters = {
   constituency?: string
   sector?: string
   status?: string
+  hasBudget?: boolean
   limit?: number
   offset?: number
   sort?: "risk" | "budget" | "name"
@@ -57,7 +59,7 @@ const fallbackProjects: Project[] = enhancedProjectData.map((project) => ({
 }))
 
 const applyFilters = (data: Project[], filters: ProjectFilters): Project[] => {
-  const { search, county, constituency, sector, status, sort = "risk" } = filters
+  const { search, county, constituency, sector, status, hasBudget, sort = "risk" } = filters
 
   let filtered = [...data]
 
@@ -77,6 +79,11 @@ const applyFilters = (data: Project[], filters: ProjectFilters): Project[] => {
   if (status) {
     filtered = filtered.filter((project) => project.status === status)
   }
+  if (hasBudget === true) {
+    filtered = filtered.filter((project) => toNumber(project.budgetAllocated) > 0)
+  } else if (hasBudget === false) {
+    filtered = filtered.filter((project) => toNumber(project.budgetAllocated) <= 0)
+  }
 
   filtered.sort((a, b) => {
     if (sort === "budget") return b.budgetAllocated - a.budgetAllocated
@@ -89,14 +96,14 @@ const applyFilters = (data: Project[], filters: ProjectFilters): Project[] => {
 
 export async function fetchProjects(filters: ProjectFilters = {}): Promise<{ data: Project[]; error?: string }> {
   const supabase = getSupabaseServiceRoleClient()
-  const { search, county, constituency, sector, status, limit = 60, offset = 0, sort = "risk" } = filters
+  const { search, county, constituency, sector, status, hasBudget, limit = 60, offset = 0, sort = "risk" } = filters
 
   if (!supabase) {
     const filtered = applyFilters(fallbackProjects, filters)
     return { data: filtered.slice(offset, offset + limit) }
   }
 
-  let query = supabase.from("projects").select("*", { count: "exact" })
+  let query = fromDataSchema(supabase, "projects").select("*", { count: "exact" })
 
   if (search) {
     query = query.ilike("name", `%${search}%`)
@@ -112,6 +119,11 @@ export async function fetchProjects(filters: ProjectFilters = {}): Promise<{ dat
   }
   if (status) {
     query = query.eq("status", status)
+  }
+  if (hasBudget === true) {
+    query = query.gt("budget_allocated", 0)
+  } else if (hasBudget === false) {
+    query = query.lte("budget_allocated", 0)
   }
 
   switch (sort) {
@@ -150,7 +162,7 @@ export async function fetchProjectById(projectId: string): Promise<{ data?: Proj
   }
 
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-  let query = supabase.from("projects").select("*").limit(1)
+  let query = fromDataSchema(supabase, "projects").select("*").limit(1)
 
   if (uuidPattern.test(projectId)) {
     query = query.eq("id", projectId)

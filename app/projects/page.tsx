@@ -10,6 +10,8 @@ import type { County, Constituency } from "@/lib/data-fetching-service"
 import type { EnhancedProject } from "@/lib/enhanced-project-data"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 
 type ApiProject = {
   id: string
@@ -90,6 +92,7 @@ export default function ProjectsPage() {
   const [selectedCounty, setSelectedCounty] = useState<County | null>(null)
   const [selectedConstituency, setSelectedConstituency] = useState<Constituency | null>(null)
   const [projects, setProjects] = useState<EnhancedProject[]>([])
+  const [includeUndisclosed, setIncludeUndisclosed] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -98,6 +101,9 @@ export default function ProjectsPage() {
     setError(null)
     try {
       const query = new URLSearchParams({ limit: "1000", sort: "risk" })
+      if (!includeUndisclosed) {
+        query.set("hasBudget", "true")
+      }
       if (county) query.set("county", county)
       if (constituency) query.set("constituency", constituency)
       const res = await fetch(`/api/projects?${query.toString()}`)
@@ -111,7 +117,7 @@ export default function ProjectsPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [includeUndisclosed])
 
   useEffect(() => {
     fetchProjects()
@@ -179,15 +185,21 @@ export default function ProjectsPage() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={exportData} disabled={projects.length === 0}>
-                <Download className="mr-2 h-4 w-4" />
-                Export data ({projects.length})
-              </Button>
-              <Link href="/map">
-                <Button variant="outline">
-                  <Map className="mr-2 h-4 w-4" />
-                  View on map
+                <Button variant="outline" onClick={exportData} disabled={projects.length === 0}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export data ({projects.length})
                 </Button>
+                <div className="flex items-center gap-2 rounded-full border border-foreground/20 bg-white/90 px-3 py-2">
+                  <Switch id="include-undisclosed" checked={includeUndisclosed} onCheckedChange={setIncludeUndisclosed} />
+                  <Label htmlFor="include-undisclosed" className="text-xs font-semibold uppercase tracking-wide text-foreground/80">
+                    Include undisclosed budgets
+                  </Label>
+                </div>
+                <Link href="/map">
+                  <Button variant="outline">
+                    <Map className="mr-2 h-4 w-4" />
+                    View on map
+                  </Button>
               </Link>
             </div>
           </div>
@@ -196,6 +208,11 @@ export default function ProjectsPage() {
               {error}
             </div>
           )}
+          <div className="mt-4 text-xs text-muted-foreground">
+            {includeUndisclosed
+              ? "Showing all source records, including projects with undisclosed budgets."
+              : "Showing only projects with disclosed budgets. Toggle on to include all records."}
+          </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { label: "Total projects", value: summary.totalProjects },
