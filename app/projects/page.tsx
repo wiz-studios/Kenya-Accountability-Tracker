@@ -27,39 +27,64 @@ type ApiProject = {
   longitude?: number | null
 }
 
-const toEnhancedProject = (project: ApiProject): EnhancedProject => ({
-  id: project.id,
-  name: project.name,
-  description: `Public ${project.sector.toLowerCase()} project in ${project.county}.`,
-  county: project.county,
-  countyId: project.county.toLowerCase().replace(/\s+/g, "-"),
-  constituency: project.constituency,
-  constituencyId: project.constituency.toLowerCase().replace(/\s+/g, "-"),
-  sector: project.sector,
-  budget: Number(project.budgetAllocated || 0),
-  spent: Number(project.budgetSpent || 0),
-  status: project.status,
-  startDate: project.startDate || "2024-01-01",
-  expectedCompletion: project.endDate || "2026-12-31",
-  actualStatus: `${Math.round(
-    project.budgetAllocated ? ((project.budgetSpent || 0) / project.budgetAllocated) * 100 : 0,
-  )}% Budget Utilized`,
-  progress: Math.max(Math.min(Math.round(project.budgetAllocated ? ((project.budgetSpent || 0) / project.budgetAllocated) * 100 : 0), 100), 0),
-  contractor: "Data pending verification",
-  supervisor: "Data pending verification",
-  issues: project.status === "Stalled" ? ["Delivery stalled"] : [],
-  lastUpdate: new Date().toISOString().slice(0, 10),
-  source: "KAT API",
-  urgency: project.riskScore >= 80 ? "high" : project.riskScore >= 50 ? "medium" : "low",
-  images: [],
-  documents: [],
-  mp: "Pending",
-  governor: "Pending",
-  coordinates:
-    project.latitude !== null && project.latitude !== undefined && project.longitude !== null && project.longitude !== undefined
-      ? { lat: Number(project.latitude), lng: Number(project.longitude) }
-      : undefined,
-})
+const statusProgressFallback: Record<string, number> = {
+  Completed: 100,
+  Active: 55,
+  Resumed: 60,
+  "Behind Schedule": 45,
+  Delayed: 35,
+  Stalled: 20,
+  Cancelled: 0,
+}
+
+const toEnhancedProject = (project: ApiProject): EnhancedProject => {
+  const budget = Number(project.budgetAllocated || 0)
+  const spent = Number(project.budgetSpent || 0)
+  const hasBudget = budget > 0
+  const budgetProgress = hasBudget ? Math.round((spent / budget) * 100) : null
+  const progress =
+    typeof budgetProgress === "number"
+      ? Math.max(Math.min(budgetProgress, 100), 0)
+      : statusProgressFallback[project.status] ?? 0
+  const county = project.county || "Unknown"
+  const constituency = project.constituency || (county === "National" ? "National" : "County-wide")
+
+  return {
+    id: project.id,
+    name: project.name,
+    description:
+      county === "National"
+        ? `Official ${project.sector.toLowerCase()} procurement record with national coverage.`
+        : `Official ${project.sector.toLowerCase()} procurement record in ${county}.`,
+    county,
+    countyId: county.toLowerCase().replace(/\s+/g, "-"),
+    constituency,
+    constituencyId: constituency.toLowerCase().replace(/\s+/g, "-"),
+    sector: project.sector,
+    budget,
+    spent,
+    status: project.status,
+    startDate: project.startDate || "Unknown",
+    expectedCompletion: project.endDate || "Unknown",
+    actualStatus:
+      typeof budgetProgress === "number" ? `${Math.max(Math.min(budgetProgress, 100), 0)}% Budget Utilized` : "Budget not published",
+    progress,
+    contractor: "Not disclosed in source",
+    supervisor: "Source record only",
+    issues: project.status === "Stalled" ? ["Delivery stalled"] : [],
+    lastUpdate: project.endDate || project.startDate || "Unknown",
+    source: "PPIP/OCDS",
+    urgency: project.riskScore >= 80 ? "high" : project.riskScore >= 50 ? "medium" : "low",
+    images: [],
+    documents: [],
+    mp: "Pending",
+    governor: "Pending",
+    coordinates:
+      project.latitude !== null && project.latitude !== undefined && project.longitude !== null && project.longitude !== undefined
+        ? { lat: Number(project.latitude), lng: Number(project.longitude) }
+        : undefined,
+  }
+}
 
 export default function ProjectsPage() {
   const [selectedCounty, setSelectedCounty] = useState<County | null>(null)
