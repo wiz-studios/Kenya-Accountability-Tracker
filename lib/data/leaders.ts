@@ -49,6 +49,12 @@ const applyMemorialOverlay = (leader: Leader): Leader => {
     memorialDate: memorial.memorialDate ?? leader.memorialDate ?? null,
     memorialMessage: memorial.message || leader.memorialMessage || null,
     memorialSourceUrl: memorial.sourceUrl ?? leader.memorialSourceUrl ?? null,
+    photoUrl: memorial.photoUrl ?? leader.photoUrl ?? null,
+    keyProjects: memorial.keyProjects?.length ? memorial.keyProjects : leader.keyProjects ?? [],
+    recentActions: memorial.recentActions?.length ? memorial.recentActions : leader.recentActions ?? [],
+    allegations: typeof memorial.allegations === "number" ? memorial.allegations : leader.allegations,
+    accountabilityScore:
+      typeof memorial.accountabilityScore === "number" ? memorial.accountabilityScore : leader.accountabilityScore,
   }
 }
 

@@ -230,8 +230,18 @@ export default function LeadersPage() {
               >
                 <CardHeader>
                   <div className="flex items-start gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full border border-foreground/10 bg-foreground/5">
-                      <Users className="h-8 w-8 text-muted-foreground" />
+                    <div className="h-16 w-16 overflow-hidden rounded-full border border-foreground/10 bg-foreground/5">
+                      {leader.photoUrl ? (
+                        <img
+                          src={leader.photoUrl}
+                          alt={leader.name}
+                          className={`h-full w-full object-cover ${leader.isMemorial ? "grayscale" : ""}`}
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                          <Users className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                      )}
                     </div>
                     <div className="flex-1">
                       <CardTitle className="text-lg text-foreground">{leader.name}</CardTitle>
@@ -280,7 +290,9 @@ export default function LeadersPage() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <div className="text-muted-foreground">Projects</div>
-                      <div className="font-semibold text-foreground">{leader.projectsOverseen}</div>
+                      <div className="font-semibold text-foreground">
+                        {leader.keyProjects?.length ? leader.keyProjects.length : leader.projectsOverseen}
+                      </div>
                     </div>
                     <div>
                       <div className="text-muted-foreground">Budget</div>
@@ -293,10 +305,34 @@ export default function LeadersPage() {
                       <div className="font-semibold text-foreground">{leader.term}</div>
                     </div>
                     <div>
-                      <div className="text-muted-foreground">Party</div>
-                      <div className="font-semibold text-foreground">{leader.party}</div>
+                      <div className="text-muted-foreground">Allegations</div>
+                      <div className="font-semibold text-foreground">
+                        {leader.allegations === 0 ? "None in current records" : `${leader.allegations} item(s)`}
+                      </div>
                     </div>
                   </div>
+
+                  {leader.keyProjects && leader.keyProjects.length > 0 && (
+                    <div className="rounded-2xl border border-foreground/10 bg-background p-3">
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Project Highlights</h4>
+                      <ul className="mt-2 space-y-1 text-sm text-foreground">
+                        {leader.keyProjects.slice(0, 3).map((item) => (
+                          <li key={item}>• {item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {leader.recentActions && leader.recentActions.length > 0 && (
+                    <div className="rounded-2xl border border-foreground/10 bg-background p-3">
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Recent Public Record</h4>
+                      <ul className="mt-2 space-y-1 text-sm text-foreground">
+                        {leader.recentActions.slice(0, 2).map((item) => (
+                          <li key={item}>• {item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                   <div className="flex items-center gap-2 border-t border-foreground/10 pt-2">
                     {!leader.isMemorial ? (
