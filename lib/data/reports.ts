@@ -1,4 +1,5 @@
 import { getSupabaseServiceRoleClient } from "@/lib/supabase-client"
+import { fromDataSchema } from "@/lib/supabase-data-schema"
 import type { Report, ReportEvidence, ReportStatus, ReportStatusEvent } from "@/lib/types"
 import { fallbackReports } from "@/lib/data/mock-reports"
 
@@ -184,7 +185,7 @@ const insertSupabaseStatusEvent = async (input: {
 }) => {
   const supabase = getSupabaseServiceRoleClient()
   if (!supabase) return
-  const { error } = await supabase.from("report_status_events").insert({
+  const { error } = await fromDataSchema(supabase, "report_status_events").insert({
     report_id: input.reportId,
     from_status: input.fromStatus ?? null,
     to_status: input.toStatus,
@@ -205,8 +206,7 @@ const getSupabaseReportRecordByPublicId = async (publicId: string) => {
       error: "Supabase not configured",
     }
 
-  const { data, error } = await supabase
-    .from("reports")
+  const { data, error } = await fromDataSchema(supabase, "reports")
     .select("id,status")
     .eq("public_id", publicId)
     .limit(1)
@@ -244,7 +244,7 @@ export async function fetchReports(filters: ReportFilters = {}): Promise<{ data:
     return { data: filtered.slice(offset, offset + limit) }
   }
 
-  let query = supabase.from("reports").select("*")
+  let query = fromDataSchema(supabase, "reports").select("*")
   if (status) query = query.eq("status", status)
   if (county) query = query.eq("county", county)
   if (reportType) query = query.eq("report_type", reportType)
@@ -273,7 +273,11 @@ export async function fetchReportByPublicId(publicId: string): Promise<{ data?: 
     return { data: report }
   }
 
-  const { data, error } = await supabase.from("reports").select("*").eq("public_id", publicId).limit(1).maybeSingle()
+  const { data, error } = await fromDataSchema(supabase, "reports")
+    .select("*")
+    .eq("public_id", publicId)
+    .limit(1)
+    .maybeSingle()
   if (error) {
     return { error: error.message }
   }
@@ -328,8 +332,7 @@ export async function createReport(input: CreateReportInput): Promise<{ data?: R
     return { data: created }
   }
 
-  const { data, error } = await supabase
-    .from("reports")
+  const { data, error } = await fromDataSchema(supabase, "reports")
     .insert({
       public_id: publicId,
       report_type: input.reportType,
@@ -412,13 +415,16 @@ export async function updateReportReview(publicId: string, input: ReviewUpdateIn
     return { data: updated }
   }
 
-  const existing = await supabase.from("reports").select("id,status").eq("public_id", publicId).limit(1).maybeSingle()
+  const existing = await fromDataSchema(supabase, "reports")
+    .select("id,status")
+    .eq("public_id", publicId)
+    .limit(1)
+    .maybeSingle()
   if (existing.error) return { error: existing.error.message }
   if (!existing.data) return { error: `Report '${publicId}' not found` }
   const previousStatus = (existing.data.status ?? "Pending Review") as ReportStatus
 
-  const { data, error } = await supabase
-    .from("reports")
+  const { data, error } = await fromDataSchema(supabase, "reports")
     .update({
       ...(input.status !== undefined ? { status: input.status } : {}),
       ...(input.confidenceScore !== undefined ? { confidence_score: input.confidenceScore } : {}),
@@ -465,8 +471,7 @@ export async function fetchReportEvidence(publicId: string): Promise<{ data: Rep
     return { data: [], error: reportIdResult.error }
   }
 
-  const { data, error } = await supabase
-    .from("evidence")
+  const { data, error } = await fromDataSchema(supabase, "evidence")
     .select("*")
     .eq("report_id", reportIdResult.reportId)
     .order("inserted_at", { ascending: false })
@@ -519,8 +524,7 @@ export async function addReportEvidence(
     return { error: reportIdResult.error }
   }
 
-  const { data, error } = await supabase
-    .from("evidence")
+  const { data, error } = await fromDataSchema(supabase, "evidence")
     .insert({
       report_id: reportIdResult.reportId,
       label: input.label,
@@ -588,8 +592,7 @@ export async function updateReportEvidence(
     return { error: reportRecord.error }
   }
 
-  const { data, error } = await supabase
-    .from("evidence")
+  const { data, error } = await fromDataSchema(supabase, "evidence")
     .update({
       verification_state: input.verificationState,
     })
@@ -626,8 +629,7 @@ export async function fetchReportTimeline(publicId: string): Promise<{ data: Rep
     return { data: [], error: reportIdResult.error }
   }
 
-  const { data, error } = await supabase
-    .from("report_status_events")
+  const { data, error } = await fromDataSchema(supabase, "report_status_events")
     .select("*")
     .eq("report_id", reportIdResult.reportId)
     .order("inserted_at", { ascending: false })

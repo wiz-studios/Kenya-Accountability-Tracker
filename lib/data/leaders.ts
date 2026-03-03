@@ -1,6 +1,8 @@
 import { getSupabaseServiceRoleClient } from "@/lib/supabase-client"
+import { fromDataSchema } from "@/lib/supabase-data-schema"
 import type { Leader } from "@/lib/types"
 import { senatorsData } from "@/lib/senators-data"
+import { getMemorialLeaderByName } from "@/lib/data/memorial-leaders"
 
 export type LeaderFilters = {
   search?: string
@@ -32,7 +34,23 @@ const mapLeaderRow = (row: Record<string, any>): Leader => ({
   keyProjects: row.key_projects ?? row.keyProjects ?? [],
   socialTwitter: row.social_twitter ?? row.socialTwitter ?? null,
   socialFacebook: row.social_facebook ?? row.socialFacebook ?? null,
+  isMemorial: row.is_memorial ?? row.isMemorial ?? false,
+  memorialDate: row.memorial_date ?? row.memorialDate ?? null,
+  memorialMessage: row.memorial_message ?? row.memorialMessage ?? null,
+  memorialSourceUrl: row.memorial_source_url ?? row.memorialSourceUrl ?? null,
 })
+
+const applyMemorialOverlay = (leader: Leader): Leader => {
+  const memorial = getMemorialLeaderByName(leader.name)
+  if (!memorial) return leader
+  return {
+    ...leader,
+    isMemorial: true,
+    memorialDate: memorial.memorialDate ?? leader.memorialDate ?? null,
+    memorialMessage: memorial.message || leader.memorialMessage || null,
+    memorialSourceUrl: memorial.sourceUrl ?? leader.memorialSourceUrl ?? null,
+  }
+}
 
 const fallbackLeaders: Leader[] = [
   {
@@ -129,10 +147,10 @@ export async function fetchLeaders(filters: LeaderFilters = {}): Promise<{ data:
 
   if (!supabase) {
     const filtered = applyFilters(fallbackLeaders, filters)
-    return { data: filtered.slice(offset, offset + limit) }
+    return { data: filtered.slice(offset, offset + limit).map(applyMemorialOverlay) }
   }
 
-  let query = supabase.from("leaders").select("*", { count: "exact" })
+  let query = fromDataSchema(supabase, "leaders").select("*", { count: "exact" })
 
   if (search) {
     query = query.ilike("name", `%${search}%`)
@@ -170,5 +188,5 @@ export async function fetchLeaders(filters: LeaderFilters = {}): Promise<{ data:
     return { data: [], error: error.message }
   }
 
-  return { data: (data || []).map(mapLeaderRow) }
+  return { data: (data || []).map(mapLeaderRow).map(applyMemorialOverlay) }
 }

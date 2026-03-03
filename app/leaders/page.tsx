@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { AlertTriangle, ExternalLink, Filter, MapPin, Phone, Search, Shield, Users } from "lucide-react"
+import { AlertTriangle, ExternalLink, Filter, Heart, MapPin, Phone, Search, Shield, Users } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,10 +10,10 @@ import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SimpleLocationSelector } from "@/components/simple-location-selector"
 import type { County, Constituency } from "@/lib/enhanced-kenya-locations"
-import { formatNumber } from "@/lib/formatters"
+import { formatDate, formatNumber } from "@/lib/formatters"
 import type { Leader } from "@/lib/types"
 
-const positions = ["All Positions", "County Governor", "Member of Parliament", "Senator", "County Executive"]
+const positions = ["All Positions", "County Governor", "Member of Parliament", "Senator"]
 const parties = ["All Parties", "UDA", "ODM", "Jubilee", "ANC", "DAP-K", "Other"]
 
 export default function LeadersPage() {
@@ -58,6 +58,7 @@ export default function LeadersPage() {
 
   const totalLeaders = leaders.length
   const leadersWithAllegations = leaders.filter((leader) => leader.allegations > 0).length
+  const memorialLeaders = leaders.filter((leader) => leader.isMemorial).length
   const averageScore = Math.round(leaders.reduce((sum, leader) => sum + leader.accountabilityScore, 0) / totalLeaders || 0)
   const totalBudget = leaders.reduce((sum, leader) => sum + leader.budgetManaged, 0)
 
@@ -90,9 +91,10 @@ export default function LeadersPage() {
               {error}
             </div>
           )}
-          <div className="mt-6 grid gap-4 md:grid-cols-4">
+          <div className="mt-6 grid gap-4 md:grid-cols-5">
             {[
               { label: "Leaders tracked", value: totalLeaders, icon: Users },
+              { label: "In memoriam", value: memorialLeaders, icon: Heart },
               { label: "With allegations", value: leadersWithAllegations, icon: AlertTriangle },
               { label: "Average score", value: averageScore, icon: Shield },
               { label: "Total budget", value: `KSh ${formatNumber(Math.round(totalBudget / 1_000_000_000))}B`, icon: Users },
@@ -222,7 +224,10 @@ export default function LeadersPage() {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {sortedLeaders.map((leader) => (
-              <Card key={leader.id} className="border-foreground/10 bg-white/90 shadow-sm">
+              <Card
+                key={leader.id}
+                className={`bg-white/90 shadow-sm ${leader.isMemorial ? "border-amber-300/70" : "border-foreground/10"}`}
+              >
                 <CardHeader>
                   <div className="flex items-start gap-4">
                     <div className="flex h-16 w-16 items-center justify-center rounded-full border border-foreground/10 bg-foreground/5">
@@ -243,10 +248,24 @@ export default function LeadersPage() {
                     <Badge variant="outline" className="border-foreground/20 text-foreground">
                       {leader.party}
                     </Badge>
-                    <Badge variant={leader.allegations === 0 ? "default" : "destructive"}>
-                      {leader.allegations === 0 ? "Clean record" : `${leader.allegations} allegation(s)`}
-                    </Badge>
+                    {leader.isMemorial ? (
+                      <Badge variant="secondary" className="bg-amber-100 text-amber-900">
+                        In memoriam
+                      </Badge>
+                    ) : (
+                      <Badge variant={leader.allegations === 0 ? "default" : "destructive"}>
+                        {leader.allegations === 0 ? "Clean record" : `${leader.allegations} allegation(s)`}
+                      </Badge>
+                    )}
                   </div>
+                  {leader.isMemorial && (
+                    <div className="mt-3 rounded-2xl border border-amber-300/70 bg-amber-50/80 p-3 text-sm text-amber-900">
+                      <div className="font-medium">
+                        {leader.memorialDate ? `Passed on ${formatDate(leader.memorialDate)}` : "In honored memory"}
+                      </div>
+                      {leader.memorialMessage && <p className="mt-1 text-xs text-amber-800">{leader.memorialMessage}</p>}
+                    </div>
+                  )}
                 </CardHeader>
 
                 <CardContent className="space-y-4">
@@ -280,14 +299,30 @@ export default function LeadersPage() {
                   </div>
 
                   <div className="flex items-center gap-2 border-t border-foreground/10 pt-2">
-                    <Button variant="ghost" size="sm" className="flex-1">
-                      <Phone className="mr-1 h-3 w-3" />
-                      Contact
-                    </Button>
-                    <Button variant="ghost" size="sm" className="flex-1">
-                      <ExternalLink className="mr-1 h-3 w-3" />
-                      Profile
-                    </Button>
+                    {!leader.isMemorial ? (
+                      <Button variant="ghost" size="sm" className="flex-1">
+                        <Phone className="mr-1 h-3 w-3" />
+                        Contact
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" size="sm" className="flex-1" disabled>
+                        <Heart className="mr-1 h-3 w-3" />
+                        Tribute
+                      </Button>
+                    )}
+                    {leader.memorialSourceUrl ? (
+                      <Button variant="ghost" size="sm" className="flex-1" asChild>
+                        <a href={leader.memorialSourceUrl} target="_blank" rel="noreferrer">
+                          <ExternalLink className="mr-1 h-3 w-3" />
+                          Memorial
+                        </a>
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" size="sm" className="flex-1">
+                        <ExternalLink className="mr-1 h-3 w-3" />
+                        Profile
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>

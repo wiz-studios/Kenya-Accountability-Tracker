@@ -1,4 +1,5 @@
 import { getSupabaseServiceRoleClient } from "@/lib/supabase-client"
+import { fromDataSchema } from "@/lib/supabase-data-schema"
 import type { Expenditure } from "@/lib/types"
 import { stateHouseExpenditures } from "@/lib/state-house"
 
@@ -62,7 +63,7 @@ export async function fetchExpenditures(
     return { data: filtered.slice(offset, offset + limit) }
   }
 
-  let query = supabase.from("expenditures").select("*", { count: "exact" })
+  let query = fromDataSchema(supabase, "expenditures").select("*", { count: "exact" })
 
   if (search) {
     query = query.ilike("description", `%${search}%`)

@@ -1,4 +1,5 @@
 import { getSupabaseServiceRoleClient } from "@/lib/supabase-client"
+import { fromDataSchema } from "@/lib/supabase-data-schema"
 import type { DataSource } from "@/lib/types"
 import { fallbackDataSources, fallbackRecentSourceReports } from "@/lib/data/mock-data-sources"
 
@@ -65,7 +66,7 @@ export async function fetchSources(filters: SourceFilters = {}): Promise<{ data:
     return { data: sorted.slice(offset, offset + limit) }
   }
 
-  let query = supabase.from("data_sources").select("*")
+  let query = fromDataSchema(supabase, "data_sources").select("*")
 
   if (search) {
     query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`)

@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sync:projects:ppip": "node scripts/ingest/sync-ppip-projects.mjs",
+    "merge:check": "node scripts/migration/check-collisions.mjs",
+    "merge:export": "node scripts/migration/export-kat-data.mjs",
+    "merge:import": "node scripts/migration/import-kat-data.mjs",
+    "merge:namespace-sql": "node scripts/migration/generate-schema-for-namespace.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

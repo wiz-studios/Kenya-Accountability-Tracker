@@ -17,6 +17,10 @@ export type Leader = {
   keyProjects?: string[] | null
   socialTwitter?: string | null
   socialFacebook?: string | null
+  isMemorial?: boolean
+  memorialDate?: string | null
+  memorialMessage?: string | null
+  memorialSourceUrl?: string | null
 }
 
 export type Senator = {
